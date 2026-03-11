@@ -1269,7 +1269,13 @@ function syncTicketToSheets(ticket) {
 
 async function syncAtencionToSheets(ticket) {
   if (!sheetsSyncEnabled) return;
-  // PASO 1: guardar todos los datos SIN foto por JSONP (seguro, sin límite práctico)
+
+  // Normalizar fotos a array
+  const fotos = Array.isArray(ticket.foto)
+    ? ticket.foto.filter(f => f && f.startsWith('data:'))
+    : (ticket.foto && ticket.foto.startsWith('data:') ? [ticket.foto] : []);
+
+  // PASO 1: guardar datos del ticket SIN fotos primero
   const atencion = {
     id:            ticket.id,
     fechaRegistro: ticket.fecha + ' ' + ticket.hora,
@@ -1282,31 +1288,35 @@ async function syncAtencionToSheets(ticket) {
     procedimiento: ticket.procedimiento || '',
     estado:        ticket.estado,
     prioridad:     ticket.prioridad || '',
-    tieneFoto:     (Array.isArray(ticket.foto)?ticket.foto.length>0:!!ticket.foto) ? 'Sí' : 'No',
+    tieneFoto:     fotos.length > 0 ? 'Sí' : 'No',
     fotoBase64:    ''
   };
   sheetsCall({ action: 'saveAtencion', data: atencion });
 
-  // PASO 2: si hay foto, subirla por separado con acción uploadFoto
-  if (ticket.foto && ticket.foto.startsWith('data:')) {
+  // PASO 2: subir cada foto por separado con índice
+  for (let fIdx = 0; fIdx < fotos.length; fIdx++) {
     try {
-      const fotoComprimida = await comprimirFoto(ticket.foto, 350, 0.45);
-      // Dividir en chunks de 6000 chars para evitar límite de URL
+      const fotoComprimida = await comprimirFoto(fotos[fIdx], 350, 0.45);
+      // Dividir en chunks de 6000 chars
       const chunks = [];
       for (let i = 0; i < fotoComprimida.length; i += 6000) {
         chunks.push(fotoComprimida.slice(i, i + 6000));
       }
       const total = chunks.length;
+      // ID único por foto: TK-0001_f0, TK-0001_f1, etc.
+      const fotoId = ticket.id + '_f' + fIdx;
       for (let i = 0; i < chunks.length; i++) {
         await sheetsCall({
-          action:  'uploadFotoChunk',
-          id:      ticket.id,
-          chunk:   chunks[i],
-          idx:     i,
-          total:   total
+          action: 'uploadFotoChunk',
+          id:     fotoId,
+          ticketId: ticket.id,
+          fIdx:   fIdx,
+          chunk:  chunks[i],
+          idx:    i,
+          total:  total
         });
       }
-    } catch(e) { console.warn('Error subiendo foto:', e); }
+    } catch(e) { console.warn('Error subiendo foto ' + fIdx + ':', e); }
   }
 }
 
