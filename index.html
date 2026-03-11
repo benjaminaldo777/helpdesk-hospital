@@ -1264,7 +1264,24 @@ function sheetsRead(params) {
 
 function syncTicketToSheets(ticket) {
   if (!sheetsSyncEnabled) return;
-  sheetsCall({ action: 'saveTicket', data: ticket });
+  // Excluir foto del objeto — las fotos van por syncAtencionToSheets aparte
+  // Si se incluyen, el base64 infla la URL y la llamada falla silenciosamente
+  const ticketSinFoto = {
+    id:           ticket.id,
+    doctor:       ticket.doctor,
+    prioridad:    ticket.prioridad,
+    area:         ticket.area,
+    categoria:    ticket.categoria,
+    problema:     ticket.problema,
+    tecnico:      ticket.tecnico   || '',
+    procedimiento:ticket.procedimiento || '',
+    estado:       ticket.estado,
+    fecha:        ticket.fecha,
+    hora:         ticket.hora,
+    editado:      ticket.editado   || '',
+    createdByDni: ticket.createdByDni || ''
+  };
+  sheetsCall({ action: 'saveTicket', data: ticketSinFoto });
 }
 
 async function syncAtencionToSheets(ticket) {
