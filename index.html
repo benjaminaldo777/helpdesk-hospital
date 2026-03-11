@@ -811,7 +811,7 @@ header {
               <div class="doctor-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem">
                 <div class="form-group">
                   <label class="form-label">Doctor / Solicitante *</label>
-                  <input class="form-input" id="d-doc" placeholder="Dr. Juan Pérez">
+                  <input class="form-input" id="d-doc" placeholder="DR. JUAN PÉREZ" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Prioridad *</label>
@@ -842,7 +842,7 @@ header {
                 <label class="form-label">Descripción del Problema *</label>
                 <div class="prob-checklist" id="d-prob-list"></div>
                 <div class="prob-otros-box" id="d-prob-otros-box">
-                  <textarea id="d-prob-otros" placeholder="Describa el problema..." oninput="syncProbHidden('d-prob-list','d-prob-otros-box','d-prob-otros')"></textarea>
+                  <textarea id="d-prob-otros" placeholder="DESCRIBA EL PROBLEMA..." oninput="this.value=this.value.toUpperCase();syncProbHidden('d-prob-list','d-prob-otros-box','d-prob-otros')" style="text-transform:uppercase"></textarea>
                 </div>
                 <input type="hidden" id="d-prob">
               </div>
@@ -878,7 +878,7 @@ header {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Doctor / Solicitante *</label>
-          <input class="form-input" id="f-doc" placeholder="Dr. Juan Pérez">
+          <input class="form-input" id="f-doc" placeholder="DR. JUAN PÉREZ" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase">
         </div>
         <div class="form-group">
           <label class="form-label">Prioridad *</label>
@@ -907,7 +907,7 @@ header {
         <label class="form-label">Descripción del problema *</label>
         <div class="prob-checklist" id="f-prob-list"></div>
         <div class="prob-otros-box" id="f-prob-otros-box">
-          <textarea id="f-prob-otros" placeholder="Describa el problema..." oninput="syncProbHidden('f-prob-list','f-prob-otros-box','f-prob-otros')"></textarea>
+          <textarea id="f-prob-otros" placeholder="DESCRIBA EL PROBLEMA..." oninput="this.value=this.value.toUpperCase();syncProbHidden('f-prob-list','f-prob-otros-box','f-prob-otros')" style="text-transform:uppercase"></textarea>
         </div>
         <input type="hidden" id="f-prob">
       </div>
@@ -1296,12 +1296,13 @@ function syncTicketToSheets(ticket) {
 async function syncAtencionToSheets(ticket) {
   if (!sheetsSyncEnabled) return;
 
-  // Normalizar fotos a array
-  const fotos = Array.isArray(ticket.foto)
-    ? ticket.foto.filter(f => f && f.startsWith('data:'))
-    : (ticket.foto && ticket.foto.startsWith('data:') ? [ticket.foto] : []);
+  // Normalizar fotos a array de base64 válidos
+  const todasFotos = Array.isArray(ticket.foto) ? ticket.foto : (ticket.foto ? [ticket.foto] : []);
+  const fotos = todasFotos.filter(f => f && f.startsWith('data:'));
+  const tieneFotosGuardadas = todasFotos.length > 0; // puede que ya estén en Drive
 
-  // PASO 1: guardar datos del ticket SIN fotos primero
+  // PASO 1: guardar datos — si no hay fotos nuevas pero ticket ya tenía fotos,
+  // enviar tieneFoto='mantener' para que el Apps Script NO pise la celda existente
   const atencion = {
     id:            ticket.id,
     fechaRegistro: ticket.fecha + ' ' + ticket.hora,
@@ -1314,13 +1315,12 @@ async function syncAtencionToSheets(ticket) {
     procedimiento: ticket.procedimiento || '',
     estado:        ticket.estado,
     prioridad:     ticket.prioridad || '',
-    tieneFoto:     fotos.length > 0 ? 'Sí' : 'No',
+    tieneFoto:     fotos.length > 0 ? 'Sí' : (tieneFotosGuardadas ? 'mantener' : 'No'),
     fotoBase64:    ''
   };
   sheetsCall({ action: 'saveAtencion', data: atencion });
 
-  // PASO 2: subir cada foto comprimida en UN SOLO envío (sin chunks)
-  // Compresión agresiva: 200px / 25% calidad ≈ 5-12KB base64, cabe en URL GET
+  // PASO 2: subir fotos nuevas (base64) a Drive
   for (let fIdx = 0; fIdx < fotos.length; fIdx++) {
     try {
       const fotoComprimida = await comprimirFoto(fotos[fIdx], 200, 0.25);
