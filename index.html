@@ -591,15 +591,19 @@ header {
 
 
 /* ── TICKETS ABIERTOS PARPADEAN ── */
-@keyframes pulseOpen {
+@keyframes pulseRojo {
   0%,100% { border-color:var(--border); box-shadow:var(--shadow); }
-  50%      { border-color:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,0.18), 0 4px 20px rgba(245,158,11,0.15); }
+  50%      { border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,0.2), 0 4px 20px rgba(239,68,68,0.15); }
+}
+@keyframes pulseCeleste {
+  0%,100% { border-color:var(--border); box-shadow:var(--shadow); }
+  50%      { border-color:#38bdf8; box-shadow:0 0 0 3px rgba(56,189,248,0.2), 0 4px 20px rgba(56,189,248,0.15); }
 }
 .ticket-card.abierto-pulse {
-  animation: pulseOpen 2s ease-in-out infinite;
+  animation: pulseRojo 2s ease-in-out infinite;
 }
-.ticket-card.abierto-pulse .tc-priority.alta {
-  animation: pulseOpen 1.2s ease-in-out infinite;
+.ticket-card.proceso-pulse {
+  animation: pulseCeleste 2s ease-in-out infinite;
 }
 
 /* ── GESTIÓN DE ÁREAS ── */
@@ -725,12 +729,8 @@ header {
         <button class="nav-item" onclick="filterAndShow('Abierto',this)"><span class="nav-icon">🔴</span> Abiertos</button>
         <button class="nav-item" onclick="filterAndShow('En Proceso',this)"><span class="nav-icon">🔵</span> En Proceso</button>
         <button class="nav-item" onclick="filterAndShow('Cerrado',this)"><span class="nav-icon">🟢</span> Cerrados</button>
-        <div class="sidebar-section-title" style="margin-top:0.5rem">Por Área</div>
-        <button class="nav-item" onclick="filterArea('Hospitalización',this)"><span class="nav-icon">🛏️</span> Hospitalización</button>
-        <button class="nav-item" onclick="filterArea('Gineco-Obstetricia',this)"><span class="nav-icon">👶</span> Gineco-Obst.</button>
-        <button class="nav-item" onclick="filterArea('Farmacia',this)"><span class="nav-icon">💊</span> Farmacia</button>
-        <button class="nav-item" onclick="filterArea('Emergencia',this)"><span class="nav-icon">🚨</span> Emergencia</button>
-        <button class="nav-item" onclick="filterArea('Laboratorio',this)"><span class="nav-icon">🔬</span> Laboratorio</button>
+        <div class="sidebar-section-title" style="margin-top:0.5rem">Por Área <span style="font-size:0.65rem;opacity:0.7">(top 5)</span></div>
+        <div id="topAreasNav"></div>
         <div class="sidebar-section-title" style="margin-top:0.5rem">Sistema</div>
         <button class="nav-item" id="navConfig" onclick="showView('config',this)"><span class="nav-icon">⚙️</span> Configuración</button>
         <div class="sidebar-stats" id="sidebarStats">
@@ -760,7 +760,7 @@ header {
             <h2 class="section-title" id="ticketsViewTitle">Todos los Tickets</h2>
             <input type="text" class="search-input" id="searchBar" placeholder="🔍 Buscar..." oninput="renderAll()">
           </div>
-          <div class="filters-row" style="margin-bottom:1.2rem">
+          <div class="filters-row" style="margin-bottom:0.6rem">
             <button class="pill active" onclick="setPill('todos',this)">Todos</button>
             <button class="pill" onclick="setPill('Abierto',this)">Abiertos</button>
             <button class="pill" onclick="setPill('En Proceso',this)">En Proceso</button>
@@ -768,6 +768,12 @@ header {
             <button class="pill" onclick="setPill('alta',this)">🔴 Alta</button>
             <button class="pill" onclick="setPill('media',this)">🟡 Media</button>
             <button class="pill" onclick="setPill('baja',this)">🟢 Baja</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:0.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Ordenar:</span>
+            <button class="sort-btn active" id="sort-num" onclick="setSort('numero',this)">🔢 N° Ticket</button>
+            <button class="sort-btn" id="sort-prio" onclick="setSort('prioridad',this)">⚡ Prioridad</button>
+            <button class="sort-btn" id="sort-fecha" onclick="setSort('fecha',this)">📅 Más reciente</button>
           </div>
           <div class="tickets-grid" id="allTickets"></div>
         </div>
@@ -932,18 +938,14 @@ header {
         <input type="hidden" id="f-estado" value="Abierto">
       </div>
       <div class="form-group">
-        <label class="form-label">Evidencia (foto)</label>
-        <div class="file-upload-area" id="uploadArea">
-          <input type="file" accept="image/*" id="f-foto" onchange="previewImage(this)" style="z-index:10">
+        <label class="form-label">Evidencia (fotos) <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">— máx. 4 fotos</span></label>
+        <div class="file-upload-area" id="uploadArea" onclick="document.getElementById('f-foto').click()">
+          <input type="file" accept="image/*" id="f-foto" multiple style="display:none" onchange="previewImages(this)">
           <div class="file-upload-icon">📷</div>
-          <div class="file-upload-text">Haz clic o arrastra una foto aquí</div>
-          <div class="file-upload-hint">JPG, PNG, WEBP — Max 3MB</div>
+          <div class="file-upload-text">Haz clic para agregar fotos</div>
+          <div class="file-upload-hint">JPG, PNG, WEBP — Max 3MB c/u — hasta 4 fotos</div>
         </div>
-        <div class="file-preview" id="filePreview" style="display:none;position:relative">
-          <img id="previewImg" src="" alt="Evidencia" style="pointer-events:none">
-          <button type="button" onclick="removePhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20" title="Quitar foto">✕</button>
-          <button type="button" onclick="document.getElementById('f-foto').click()" style="position:absolute;bottom:6px;right:6px;background:rgba(29,111,164,0.9);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;z-index:20;font-family:inherit">📷 Cambiar foto</button>
-        </div>
+        <div id="photosGrid" style="display:none;margin-top:0.6rem;display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1170,9 +1172,42 @@ function populateAreaSelects(currentVal) {
 }
 let activeFilter = 'todos';
 let activeAreaFilter = null;
+let activeSort = 'numero'; // 'numero' | 'prioridad' | 'fecha'
+
+function setSort(sort, btn) {
+  activeSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderAll();
+}
+
+function sortTickets(list) {
+  const priOrder = { alta:0, media:1, baja:2 };
+  const copy = [...list];
+  if (activeSort === 'numero') {
+    copy.sort((a,b) => {
+      const na = parseInt((a.id||'').replace('TK-','')) || 0;
+      const nb = parseInt((b.id||'').replace('TK-','')) || 0;
+      return nb - na; // más reciente primero
+    });
+  } else if (activeSort === 'prioridad') {
+    copy.sort((a,b) => {
+      const pa = priOrder[a.prioridad] ?? 1;
+      const pb = priOrder[b.prioridad] ?? 1;
+      if (pa !== pb) return pa - pb;
+      // Si misma prioridad, ordenar por número
+      const na = parseInt((a.id||'').replace('TK-','')) || 0;
+      const nb2 = parseInt((b.id||'').replace('TK-','')) || 0;
+      return nb2 - na;
+    });
+  } else { // fecha
+    copy.sort((a,b) => (b.ts||0) - (a.ts||0));
+  }
+  return copy;
+}
 let editingId = null;
 let currentDetailId = null;
-let pendingPhoto = null;
+let pendingPhotos = []; // array de base64, máx 4
 let editingUserDni = null;
 
 // ════════════════════════════════════════════════
@@ -1247,7 +1282,7 @@ async function syncAtencionToSheets(ticket) {
     procedimiento: ticket.procedimiento || '',
     estado:        ticket.estado,
     prioridad:     ticket.prioridad || '',
-    tieneFoto:     ticket.foto ? 'Sí' : 'No',
+    tieneFoto:     (Array.isArray(ticket.foto)?ticket.foto.length>0:!!ticket.foto) ? 'Sí' : 'No',
     fotoBase64:    ''
   };
   sheetsCall({ action: 'saveAtencion', data: atencion });
@@ -1513,6 +1548,30 @@ function filterArea(area, navEl) {
 // ════════════════════════════════════════════════
 //  STATS
 // ════════════════════════════════════════════════
+function renderTopAreas() {
+  const nav = document.getElementById('topAreasNav');
+  if (!nav) return;
+  if (!tickets.length) {
+    nav.innerHTML = '<div style="padding:6px 12px;font-size:0.75rem;color:var(--text3)">Sin tickets aún</div>';
+    return;
+  }
+  // Contar tickets por área
+  const counts = {};
+  tickets.forEach(t => { if(t.area) counts[t.area] = (counts[t.area]||0) + 1; });
+  // Ordenar y tomar top 5
+  const top5 = Object.entries(counts)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,5);
+  const icons = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  nav.innerHTML = top5.map(([area, count], i) =>
+    `<button class="nav-item" onclick="filterArea('${area.replace(/'/g,"\'")}',this)">
+      <span class="nav-icon">${icons[i]}</span>
+      <span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${area}</span>
+      <span style="background:var(--blue);color:#fff;border-radius:10px;padding:1px 7px;font-size:0.65rem;font-weight:700;flex-shrink:0">${count}</span>
+    </button>`
+  ).join('');
+}
+
 function updateStats() {
   const tot=tickets.length, op=tickets.filter(t=>t.estado==='Abierto').length,
         pr=tickets.filter(t=>t.estado==='En Proceso').length, cl=tickets.filter(t=>t.estado==='Cerrado').length;
@@ -1523,6 +1582,7 @@ function updateStats() {
   document.getElementById('ss-open').textContent=op;
   document.getElementById('ss-proc').textContent=pr;
   document.getElementById('ss-done').textContent=cl;
+  renderTopAreas();
 }
 
 // ════════════════════════════════════════════════
@@ -1530,7 +1590,7 @@ function updateStats() {
 // ════════════════════════════════════════════════
 function ticketHTML(t, clickFn='openDetail') {
   const ec = t.estado==='Abierto'?'estado-abierto':t.estado==='En Proceso'?'estado-proceso':'estado-cerrado';
-  const pulseClass = t.estado==='Abierto' ? ' abierto-pulse' : '';
+  const pulseClass = t.estado==='Abierto' ? ' abierto-pulse' : t.estado==='En Proceso' ? ' proceso-pulse' : '';
   return `<div class="ticket-card${pulseClass}" onclick="${clickFn}('${t.id}')">
     <div class="tc-priority ${t.prioridad}"></div>
     <div class="tc-body">
@@ -1621,7 +1681,7 @@ function renderMyTickets() {
 //  MODAL ADMIN
 // ════════════════════════════════════════════════
 function openNewTicket() {
-  editingId=null; pendingPhoto=null;
+  editingId=null; pendingPhotos=[];
   document.getElementById('modalTitleText').textContent='Registrar Incidencia';
   clearModalForm();
   populateAreaSelects('');
@@ -1643,7 +1703,13 @@ function openEditModal(id) {
   document.getElementById('f-proc').value=t.procedimiento||'';
   document.getElementById('f-tec').value=t.tecnico||'';
   document.getElementById('f-estado').value=t.estado||'Abierto';
-  pendingPhoto=t.foto||null;
+  // Cargar fotos existentes
+  if (t.foto) {
+    pendingPhotos = Array.isArray(t.foto) ? [...t.foto] : [t.foto];
+  } else {
+    pendingPhotos = [];
+  }
+  setTimeout(renderPhotosGrid, 30);
   // Render checklist con el valor real del ticket
   renderProbChecklist('f-prob-list','f-prob-otros-box','f-prob-otros', t.problema||'');
   // Asegurar que el hidden tenga el valor correcto
@@ -1657,26 +1723,18 @@ function openEditModal(id) {
     const map={'Abierto':'ebAbierto','En Proceso':'ebProceso','Cerrado':'ebCerrado'};
     document.getElementById(map[e]).classList.toggle('selected',t.estado===e);
   });
-  if(t.foto){
-    document.getElementById('filePreview').style.display='block';
-    document.getElementById('previewImg').src=t.foto;
-    document.getElementById('uploadArea').style.display='none';
-  } else {
-    document.getElementById('filePreview').style.display='none';
-    document.getElementById('uploadArea').style.display='block';
-  }
+
   document.getElementById('ticketOverlay').classList.add('open');
 }
 
-function closeModal() { document.getElementById('ticketOverlay').classList.remove('open'); editingId=null; pendingPhoto=null; }
+function closeModal() { document.getElementById('ticketOverlay').classList.remove('open'); editingId=null; pendingPhotos=[]; renderPhotosGrid(); }
 
 function clearModalForm() {
   ['f-doc','f-prob','f-proc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-prio').value='media'; document.getElementById('f-area').value='';
   document.getElementById('f-cat').value=''; document.getElementById('f-tec').value='';
-  document.getElementById('f-estado').value='Abierto'; document.getElementById('f-foto').value='';
-  document.getElementById('filePreview').style.display='none';
-  document.getElementById('uploadArea').style.display='block';
+  document.getElementById('f-estado').value='Abierto';
+  pendingPhotos=[]; renderPhotosGrid();
   document.querySelectorAll('.tech-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('ebAbierto').classList.add('selected');
   document.getElementById('ebProceso').classList.remove('selected');
@@ -1695,36 +1753,55 @@ function selectTech(btn, name) {
   document.getElementById('f-tec').value = selected.join(', ');
 }
 function selectEstado(btn,estado){['ebAbierto','ebProceso','ebCerrado'].forEach(id=>document.getElementById(id).classList.remove('selected'));btn.classList.add('selected');document.getElementById('f-estado').value=estado;}
-function previewImage(input){
-  if(input.files&&input.files[0]){
-    if(input.files[0].size > 3*1024*1024){
-      toast('⚠️ La foto no debe superar 3MB','warn');
-      input.value='';
-      return;
-    }
-    const r=new FileReader();
-    r.onload=e=>{
-      pendingPhoto=e.target.result;
-      document.getElementById('previewImg').src=pendingPhoto;
-      document.getElementById('filePreview').style.display='block';
-      document.getElementById('uploadArea').style.display='none';
-      toast('📷 Foto cargada correctamente');
-    };
-    r.readAsDataURL(input.files[0]);
+function previewImages(input) {
+  if (!input.files || !input.files.length) return;
+  const files = Array.from(input.files);
+  const available = 4 - pendingPhotos.length;
+  if (available <= 0) {
+    toast('⚠️ Solo se permiten hasta 4 fotos','warn');
+    input.value=''; return;
   }
+  const toLoad = files.slice(0, available);
+  if (files.length > available) toast('⚠️ Solo se permiten hasta 4 fotos — se cargaron las primeras '+available,'warn');
+  let loaded = 0;
+  toLoad.forEach(file => {
+    if (file.size > 3*1024*1024) { toast('⚠️ "'+file.name+'" supera 3MB y no se cargó','warn'); loaded++; renderPhotosGrid(); return; }
+    const r = new FileReader();
+    r.onload = e => {
+      pendingPhotos.push(e.target.result);
+      loaded++;
+      if (loaded === toLoad.length) { renderPhotosGrid(); toast('📷 '+toLoad.length+' foto(s) cargada(s)'); }
+    };
+    r.readAsDataURL(file);
+  });
+  input.value='';
 }
 
-function removePhoto(){
-  pendingPhoto=null;
-  document.getElementById('previewImg').src='';
-  document.getElementById('filePreview').style.display='none';
-  document.getElementById('uploadArea').style.display='block';
-  document.getElementById('f-foto').value='';
-  // Si estamos editando, también quitar la foto del ticket
-  if(editingId){
-    const t=tickets.find(x=>x.id===editingId);
-    if(t) t.foto=null;
-  }
+function renderPhotosGrid() {
+  const grid = document.getElementById('photosGrid');
+  if (!grid) return;
+  if (!pendingPhotos.length) { grid.style.display='none'; return; }
+  grid.style.display='grid';
+  grid.innerHTML = pendingPhotos.map((src, i) =>
+    `<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:#f1f5f9">
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover">
+      <button type="button" onclick="removePhotoAt(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.65);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+    </div>`
+  ).join('') +
+  (pendingPhotos.length < 4 ?
+    `<div onclick="document.getElementById('f-foto').click()" style="border:2px dashed var(--border2);border-radius:8px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:1.5rem;gap:4px;transition:all 0.2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border2)'">
+      <span>＋</span><span style="font-size:0.65rem;font-weight:600">Agregar</span>
+    </div>` : '');
+}
+
+function removePhotoAt(i) {
+  pendingPhotos.splice(i, 1);
+  renderPhotosGrid();
+}
+
+function removePhoto() {
+  pendingPhotos = [];
+  renderPhotosGrid();
 }
 
 // ════════════════════════════════════════════════
@@ -1736,11 +1813,11 @@ function saveTicket() {
   const now=new Date();
   if(editingId){
     const t=tickets.find(x=>x.id===editingId);
-    if(t){t.doctor=doc;t.prioridad=document.getElementById('f-prio').value;t.area=area;t.categoria=cat;t.problema=prob;t.procedimiento=document.getElementById('f-proc').value.trim();t.tecnico=document.getElementById('f-tec').value;t.estado=document.getElementById('f-estado').value;t.foto=pendingPhoto||t.foto||null;t.editado=now.toLocaleString('es-PE');}
+    if(t){t.doctor=doc;t.prioridad=document.getElementById('f-prio').value;t.area=area;t.categoria=cat;t.problema=prob;t.procedimiento=document.getElementById('f-proc').value.trim();t.tecnico=document.getElementById('f-tec').value;t.estado=document.getElementById('f-estado').value;t.foto=pendingPhotos.length?[...pendingPhotos]:(t.foto||null);t.editado=now.toLocaleString('es-PE');}
     toast(`✅ Ticket ${editingId} actualizado`);
   } else {
     counter++;
-    const newAdminTicket = {id:`TK-${String(counter).padStart(4,'0')}`,doctor:doc,prioridad:document.getElementById('f-prio').value,area,categoria:cat,problema:prob,procedimiento:document.getElementById('f-proc').value.trim(),tecnico:document.getElementById('f-tec').value,estado:document.getElementById('f-estado').value,foto:pendingPhoto||null,fecha:now.toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric'}),hora:now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}),ts:now.getTime(),createdByDni:'admin'};
+    const newAdminTicket = {id:`TK-${String(counter).padStart(4,'0')}`,doctor:doc,prioridad:document.getElementById('f-prio').value,area,categoria:cat,problema:prob,procedimiento:document.getElementById('f-proc').value.trim(),tecnico:document.getElementById('f-tec').value,estado:document.getElementById('f-estado').value,foto:pendingPhotos.length?[...pendingPhotos]:null,fecha:now.toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric'}),hora:now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}),ts:now.getTime(),createdByDni:'admin'};
     tickets.unshift(newAdminTicket);
     toast(`🎫 Ticket TK-${String(counter).padStart(4,'0')} creado`);
   }
