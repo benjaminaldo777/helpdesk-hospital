@@ -813,7 +813,7 @@ header {
               <div class="doctor-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem">
                 <div class="form-group">
                   <label class="form-label">Doctor / Solicitante *</label>
-                  <input class="form-input" id="d-doc" placeholder="DR. JUAN PÉREZ" oninput="this.value=this.value.toUpperCase()" onkeypress="return /[A-Z0-9 ÁÉÍÓÚÑÜ.,\/\-]/i.test(String.fromCharCode(event.charCode||event.keyCode))" style="text-transform:uppercase">
+                  <input class="form-input" id="d-doc" placeholder="DR. JUAN PÉREZ" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="soloMayus(this)" onkeydown="forzarMayusKey(event)" style="text-transform:uppercase">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Prioridad *</label>
@@ -844,7 +844,7 @@ header {
                 <label class="form-label">Descripción del Problema *</label>
                 <div class="prob-checklist" id="d-prob-list"></div>
                 <div class="prob-otros-box" id="d-prob-otros-box">
-                  <textarea id="d-prob-otros" placeholder="DESCRIBA EL PROBLEMA..." oninput="this.value=this.value.toUpperCase();syncProbHidden('d-prob-list','d-prob-otros-box','d-prob-otros')" onkeypress="return /[A-Z0-9 ÁÉÍÓÚÑÜ.,\/\-\n]/i.test(String.fromCharCode(event.charCode||event.keyCode))||event.key==='Enter'||event.keyCode===13" style="text-transform:uppercase"></textarea>
+                  <textarea id="d-prob-otros" placeholder="DESCRIBA EL PROBLEMA..." autocapitalize="characters" autocorrect="off" oninput="soloMayus(this);syncProbHidden('d-prob-list','d-prob-otros-box','d-prob-otros')" onkeypress="return /[A-Z0-9 ÁÉÍÓÚÑÜ.,\/\-\n]/i.test(String.fromCharCode(event.charCode||event.keyCode))||event.key==='Enter'||event.keyCode===13" style="text-transform:uppercase"></textarea>
                 </div>
                 <input type="hidden" id="d-prob">
               </div>
@@ -880,7 +880,7 @@ header {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Doctor / Solicitante *</label>
-          <input class="form-input" id="f-doc" placeholder="DR. JUAN PÉREZ" oninput="this.value=this.value.toUpperCase()" onkeypress="return /[A-Z0-9 ÁÉÍÓÚÑÜ.,\/\-]/i.test(String.fromCharCode(event.charCode||event.keyCode))" style="text-transform:uppercase">
+          <input class="form-input" id="f-doc" placeholder="DR. JUAN PÉREZ" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="soloMayus(this)" onkeydown="forzarMayusKey(event)" style="text-transform:uppercase">
         </div>
         <div class="form-group">
           <label class="form-label">Prioridad *</label>
@@ -909,7 +909,7 @@ header {
         <label class="form-label">Descripción del problema *</label>
         <div class="prob-checklist" id="f-prob-list"></div>
         <div class="prob-otros-box" id="f-prob-otros-box">
-          <textarea id="f-prob-otros" placeholder="DESCRIBA EL PROBLEMA..." oninput="this.value=this.value.toUpperCase();syncProbHidden('f-prob-list','f-prob-otros-box','f-prob-otros')" onkeypress="return /[A-Z0-9 ÁÉÍÓÚÑÜ.,\/\-\n]/i.test(String.fromCharCode(event.charCode||event.keyCode))||event.key==='Enter'||event.keyCode===13" style="text-transform:uppercase"></textarea>
+          <textarea id="f-prob-otros" placeholder="DESCRIBA EL PROBLEMA..." autocapitalize="characters" autocorrect="off" oninput="soloMayus(this);syncProbHidden('f-prob-list','f-prob-otros-box','f-prob-otros')" onkeypress="return /[A-Z0-9 ÁÉÍÓÚÑÜ.,\/\-\n]/i.test(String.fromCharCode(event.charCode||event.keyCode))||event.key==='Enter'||event.keyCode===13" style="text-transform:uppercase"></textarea>
         </div>
         <input type="hidden" id="f-prob">
       </div>
@@ -1233,6 +1233,29 @@ let sheetsSyncEnabled = true; // siempre activo
 // ── Todo usa JSONP — funciona desde file://, Netlify, cualquier origen ──
 function sheetsCall(params) {
   return sheetsRead(params);
+}
+
+// Fuerza mayúsculas preservando posición del cursor (funciona en móvil y PC)
+function soloMayus(el) {
+  const start = el.selectionStart;
+  const end   = el.selectionEnd;
+  el.value    = el.value.toUpperCase();
+  try { el.setSelectionRange(start, end); } catch(e) {}
+}
+
+// Bloquea teclas minúsculas antes de que aparezcan en el campo
+function forzarMayusKey(e) {
+  const k = e.key;
+  // Si es una letra minúscula (longitud 1, no es mayúscula)
+  if (k.length === 1 && k !== k.toUpperCase()) {
+    e.preventDefault();
+    // Insertar la versión mayúscula manualmente
+    const el = e.target;
+    const start = el.selectionStart;
+    const end   = el.selectionEnd;
+    el.value = el.value.substring(0, start) + k.toUpperCase() + el.value.substring(end);
+    el.setSelectionRange(start + 1, start + 1);
+  }
 }
 
 function sheetsRead(params) {
