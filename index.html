@@ -1372,9 +1372,15 @@ async function loadFromSheets(silent=false) {
   const prevCount = tickets.length;
   const prevIds = new Set(tickets.map(t => t.id));
 
-  // Load tickets
+  // Load tickets — Sheets es la fuente de verdad para estado/datos
+  // pero preservar fotos locales (no se guardan en Sheets)
   if (r.tickets && r.tickets.length >= 0) {
-    tickets = r.tickets;
+    const fotosLocales = {};
+    tickets.forEach(t => { if (t.foto) fotosLocales[t.id] = t.foto; });
+    tickets = r.tickets.map(t => ({
+      ...t,
+      foto: fotosLocales[t.id] || null // restaurar fotos desde localStorage
+    }));
     counter = r.counter || 0;
     save();
   }
