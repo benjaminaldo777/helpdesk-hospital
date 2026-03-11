@@ -1293,29 +1293,17 @@ async function syncAtencionToSheets(ticket) {
   };
   sheetsCall({ action: 'saveAtencion', data: atencion });
 
-  // PASO 2: subir cada foto por separado con índice
+  // PASO 2: subir cada foto comprimida en UN SOLO envío (sin chunks)
+  // Compresión agresiva: 200px / 25% calidad ≈ 5-12KB base64, cabe en URL GET
   for (let fIdx = 0; fIdx < fotos.length; fIdx++) {
     try {
-      const fotoComprimida = await comprimirFoto(fotos[fIdx], 350, 0.45);
-      // Dividir en chunks de 6000 chars
-      const chunks = [];
-      for (let i = 0; i < fotoComprimida.length; i += 6000) {
-        chunks.push(fotoComprimida.slice(i, i + 6000));
-      }
-      const total = chunks.length;
-      // ID único por foto: TK-0001_f0, TK-0001_f1, etc.
-      const fotoId = ticket.id + '_f' + fIdx;
-      for (let i = 0; i < chunks.length; i++) {
-        await sheetsCall({
-          action: 'uploadFotoChunk',
-          id:     fotoId,
-          ticketId: ticket.id,
-          fIdx:   fIdx,
-          chunk:  chunks[i],
-          idx:    i,
-          total:  total
-        });
-      }
+      const fotoComprimida = await comprimirFoto(fotos[fIdx], 200, 0.25);
+      await sheetsCall({
+        action:   'subirFoto',
+        ticketId: ticket.id,
+        fIdx:     fIdx,
+        foto:     fotoComprimida
+      });
     } catch(e) { console.warn('Error subiendo foto ' + fIdx + ':', e); }
   }
 }
