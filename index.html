@@ -2692,12 +2692,13 @@ async function clearAllTickets() {
   renderConfig();
   toast('🗑️ Tickets eliminados — contador reiniciado a 0');
 
-  // Borrar también en Google Sheets
+  // Borrar Tickets Y Atenciones en Google Sheets
   if (sheetsSyncEnabled) {
     toast('⏳ Borrando en Google Sheets...');
-    const r = await sheetsRead({ action: 'clearTickets' });
-    if (r && r.ok) toast('✅ Google Sheets limpio — próximo ticket será TK-0001');
-    else toast('⚠️ Borra manualmente las filas en Google Sheets', 'warn');
+    const r1 = await sheetsRead({ action: 'clearTickets' });
+    const r2 = await sheetsRead({ action: 'clearAtenciones' });
+    if (r1?.ok && r2?.ok) toast('✅ Hojas Tickets y Atenciones limpiadas — próximo ticket será TK-0001');
+    else toast('⚠️ Error al limpiar Google Sheets — borra manualmente', 'warn');
   }
 }
 
