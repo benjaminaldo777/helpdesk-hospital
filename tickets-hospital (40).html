@@ -1,0 +1,2748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HelpDesk — Soporte TI Hospitalario</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f4f8;
+  --white: #ffffff;
+  --surface2: #f8fafc;
+  --border: #e2e8f0;
+  --border2: #cbd5e1;
+  --navy: #0f2744;
+  --navy2: #1e3a5f;
+  --blue: #1d6fa4;
+  --blue-light: #e8f4fd;
+  --teal: #0d9488;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --amber: #d97706;
+  --amber-light: #fef3c7;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --text: #1e293b;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.15);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* ════════════════════════════════════════
+   LOGIN SCREEN
+════════════════════════════════════════ */
+#loginScreen {
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh;
+  background: linear-gradient(135deg, #0f2744 0%, #1e3a5f 50%, #0d2137 100%);
+  position:relative; overflow:hidden;
+}
+#loginScreen::before {
+  content:'';
+  position:absolute; inset:0;
+  background-image: linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+  background-size:50px 50px;
+}
+#loginScreen::after {
+  content:'';
+  position:absolute; top:-40%; right:-20%;
+  width:600px; height:600px;
+  background: radial-gradient(circle, rgba(29,111,164,0.15) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.login-box {
+  position:relative; z-index:1;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter:blur(20px);
+  border-radius:20px;
+  width:100%; max-width:420px;
+  padding:2.5rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  animation: loginIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes loginIn { from { opacity:0; transform:translateY(30px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }
+
+.login-logo {
+  text-align:center; margin-bottom:2rem;
+}
+.login-logo-icon {
+  width:64px; height:64px;
+  background:linear-gradient(135deg,#1d6fa4,#0d9488);
+  border-radius:16px;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:28px; margin-bottom:1rem;
+  box-shadow:0 8px 25px rgba(13,148,136,0.4);
+}
+.login-logo-name {
+  font-family:'DM Serif Display',serif;
+  font-size:1.6rem; color:#fff; display:block;
+}
+.login-logo-sub {
+  font-size:0.68rem; color:#7dd3fc;
+  letter-spacing:3px; text-transform:uppercase;
+  display:block; margin-top:4px;
+}
+
+.login-label {
+  font-size:0.7rem; font-weight:700;
+  color:rgba(255,255,255,0.5);
+  text-transform:uppercase; letter-spacing:1.5px;
+  margin-bottom:0.4rem; display:block;
+}
+.login-input {
+  background:rgba(255,255,255,0.07);
+  border:1.5px solid rgba(255,255,255,0.12);
+  color:#fff; border-radius:10px;
+  padding:12px 16px; width:100%;
+  font-family:'DM Sans',sans-serif; font-size:1rem;
+  transition:all 0.2s; margin-bottom:1rem;
+  letter-spacing:1px;
+}
+.login-input:focus { outline:none; border-color:#1d6fa4; background:rgba(29,111,164,0.12); box-shadow:0 0 0 3px rgba(29,111,164,0.2); }
+.login-input::placeholder { color:rgba(255,255,255,0.25); letter-spacing:0; }
+
+.login-btn {
+  width:100%; padding:14px;
+  background:linear-gradient(135deg,#1d6fa4,#0d9488);
+  color:#fff; border:none; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-weight:700;
+  font-size:0.95rem; cursor:pointer;
+  transition:all 0.2s; margin-top:0.5rem;
+  letter-spacing:0.5px;
+}
+.login-btn:hover { filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,148,136,0.4); }
+.login-btn:active { transform:translateY(0); }
+
+.login-error {
+  background:rgba(220,38,38,0.15);
+  border:1px solid rgba(220,38,38,0.4);
+  border-radius:8px; padding:10px 14px;
+  font-size:0.82rem; color:#fca5a5;
+  margin-bottom:1rem; display:none;
+  animation: shake 0.4s ease;
+}
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+}
+
+.login-users-hint {
+  margin-top:1.5rem;
+  border-top:1px solid rgba(255,255,255,0.08);
+  padding-top:1.2rem;
+}
+.hint-title { font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:0.75rem; text-align:center; }
+.hint-list { display:flex; flex-direction:column; gap:0.4rem; }
+.hint-item {
+  display:flex; justify-content:space-between; align-items:center;
+  background:rgba(255,255,255,0.04); border-radius:6px;
+  padding:6px 12px;
+}
+.hint-user { font-size:0.75rem; color:rgba(255,255,255,0.6); }
+.hint-role {
+  font-size:0.62rem; font-weight:700; padding:2px 8px; border-radius:4px;
+  text-transform:uppercase; letter-spacing:0.5px;
+}
+.hint-role.admin { background:rgba(13,148,136,0.2); color:#34d399; }
+.hint-role.doctor { background:rgba(29,111,164,0.2); color:#7dd3fc; }
+
+/* ════════════════════════════════════════
+   APP SCREEN
+════════════════════════════════════════ */
+#appScreen { display:none; }
+
+/* HEADER */
+header {
+  background:var(--navy);
+  padding:0 2rem; height:62px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100;
+  box-shadow:0 2px 20px rgba(0,0,0,0.3);
+}
+.logo { display:flex; align-items:center; gap:0.85rem; }
+.logo-icon {
+  width:36px; height:36px;
+  background:linear-gradient(135deg,#1d6fa4,#0d9488);
+  border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;
+}
+.logo-name { font-family:'DM Serif Display',serif; font-size:1.2rem; color:#fff; }
+.logo-sub { font-size:0.62rem; color:#7dd3fc; letter-spacing:2.5px; text-transform:uppercase; display:block; margin-top:-2px; }
+.header-right { display:flex; align-items:center; gap:1rem; }
+.user-badge {
+  display:flex; align-items:center; gap:0.6rem;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; padding:6px 12px;
+}
+.user-badge-name { font-size:0.78rem; color:#e2e8f0; font-weight:600; }
+.user-badge-role { font-size:0.62rem; color:#7dd3fc; display:block; }
+.btn-logout {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+  color:#94a3b8; padding:7px 14px; border-radius:8px;
+  font-family:'DM Sans',sans-serif; font-size:0.78rem;
+  cursor:pointer; transition:all 0.18s;
+}
+.btn-logout:hover { background:rgba(220,38,38,0.15); border-color:rgba(220,38,38,0.4); color:#fca5a5; }
+.btn-primary {
+  background:linear-gradient(135deg,#1d6fa4,#0d9488);
+  color:#fff; border:none; padding:9px 20px; border-radius:8px;
+  font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.82rem;
+  cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  display:flex; align-items:center; gap:6px;
+}
+.btn-primary:hover { filter:brightness(1.1); transform:translateY(-1px); box-shadow:0 4px 18px rgba(13,148,136,0.4); }
+
+/* PAGE LAYOUT */
+.page { display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 62px); }
+.sidebar {
+  background:var(--navy2); padding:1.5rem 1rem;
+  display:flex; flex-direction:column; gap:0.25rem;
+}
+.sidebar-section-title {
+  font-size:0.6rem; letter-spacing:2.5px; text-transform:uppercase;
+  color:#64748b; padding:0.75rem 0.75rem 0.4rem; font-weight:600;
+}
+.nav-item {
+  display:flex; align-items:center; gap:0.75rem;
+  padding:0.65rem 0.85rem; border-radius:8px; cursor:pointer;
+  color:#94a3b8; font-size:0.85rem; font-weight:500;
+  transition:all 0.18s; border:none; background:transparent;
+  text-align:left; width:100%;
+}
+.nav-item:hover { background:rgba(255,255,255,0.06); color:#e2e8f0; }
+.nav-item.active { background:rgba(29,111,164,0.35); color:#7dd3fc; border-left:3px solid #1d6fa4; padding-left:calc(0.85rem - 3px); }
+.nav-icon { font-size:1rem; flex-shrink:0; }
+.sidebar-stats {
+  margin-top:auto;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px; padding:1rem;
+}
+.sidebar-stat { display:flex; justify-content:space-between; align-items:center; padding:4px 0; }
+.ss-label { font-size:0.72rem; color:#64748b; }
+.ss-val { font-family:'JetBrains Mono',monospace; font-size:0.85rem; font-weight:600; }
+.ss-val.open { color:#fbbf24; } .ss-val.proc { color:#60a5fa; } .ss-val.done { color:#34d399; }
+
+/* CONTENT */
+.content { padding:2rem; overflow-y:auto; }
+.view { display:none; }
+.view.active { display:block; animation:fadeSlide 0.3s ease; }
+@keyframes fadeSlide { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* STATS ROW */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2rem; }
+.stat-box {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:12px; padding:1.2rem 1.4rem;
+  box-shadow:var(--shadow); position:relative; overflow:hidden;
+}
+.stat-box::after {
+  content:''; position:absolute; bottom:0; left:0; right:0;
+  height:3px; border-radius:0 0 12px 12px;
+}
+.stat-box.s-total::after { background:var(--blue); }
+.stat-box.s-open::after { background:var(--amber); }
+.stat-box.s-proc::after { background:var(--teal); }
+.stat-box.s-done::after { background:var(--green); }
+.stat-n { font-family:'JetBrains Mono',monospace; font-size:2.2rem; font-weight:600; line-height:1; color:var(--navy); }
+.stat-label-box { font-size:0.72rem; color:var(--text3); margin-top:5px; text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+
+/* SECTION HEADER */
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; flex-wrap:wrap; gap:0.75rem; }
+.section-title { font-family:'DM Serif Display',serif; font-size:1.4rem; color:var(--navy); }
+.filters-row { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.pill {
+  background:var(--white); border:1px solid var(--border); color:var(--text2);
+  padding:5px 14px; border-radius:20px; font-size:0.75rem; cursor:pointer;
+  transition:all 0.18s; font-family:'DM Sans',sans-serif; font-weight:500;
+}
+.pill:hover { border-color:var(--blue); color:var(--blue); }
+.pill.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+.search-input {
+  background:var(--white); border:1px solid var(--border); color:var(--text);
+  padding:8px 14px; border-radius:8px; font-family:'DM Sans',sans-serif;
+  font-size:0.82rem; width:220px; transition:all 0.2s;
+}
+.search-input:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(29,111,164,0.12); }
+.search-input::placeholder { color:var(--text3); }
+
+/* TICKET CARDS */
+.tickets-grid { display:flex; flex-direction:column; gap:0.75rem; }
+.ticket-card {
+  background:var(--white); border:1px solid var(--border); border-radius:12px;
+  padding:1.2rem 1.5rem; cursor:pointer; transition:all 0.2s;
+  box-shadow:var(--shadow); display:grid;
+  grid-template-columns:auto 1fr auto; gap:1rem; align-items:center;
+  animation:cardIn 0.3s ease;
+}
+@keyframes cardIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.ticket-card:hover { border-color:var(--blue); box-shadow:0 4px 20px rgba(29,111,164,0.12); transform:translateY(-1px); }
+.tc-priority { width:10px; height:10px; border-radius:50%; flex-shrink:0; align-self:flex-start; margin-top:4px; }
+.tc-priority.alta { background:var(--red); box-shadow:0 0 0 3px var(--red-light); }
+.tc-priority.media { background:var(--amber); box-shadow:0 0 0 3px var(--amber-light); }
+.tc-priority.baja { background:var(--green); box-shadow:0 0 0 3px var(--green-light); }
+.tc-body { min-width:0; }
+.tc-id { font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--blue); font-weight:600; margin-bottom:3px; }
+.tc-title { font-weight:600; font-size:0.92rem; color:var(--navy); margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tc-meta { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; }
+.chip { font-size:0.65rem; padding:2px 9px; border-radius:5px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+.chip.estado-abierto { background:var(--amber-light); color:var(--amber); }
+.chip.estado-proceso { background:var(--blue-light); color:var(--blue); }
+.chip.estado-cerrado { background:var(--green-light); color:var(--green); }
+.chip.cat { background:#f1f5f9; color:#475569; }
+.chip.area { background:#ede9fe; color:#6d28d9; }
+.tc-right { text-align:right; flex-shrink:0; }
+.tc-date { font-size:0.7rem; color:var(--text3); font-family:'JetBrains Mono',monospace; }
+.tc-doctor { font-size:0.72rem; color:var(--text2); margin-top:3px; }
+.empty { text-align:center; padding:4rem; color:var(--text3); }
+.empty-icon { font-size:3rem; margin-bottom:1rem; opacity:0.4; }
+
+/* ─── DOCTOR PANEL (vista simplificada) ─── */
+.doctor-panel {
+  display:flex; align-items:center; justify-content:center;
+  min-height:calc(100vh - 62px);
+  padding:2rem;
+}
+.doctor-card {
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:20px;
+  box-shadow:var(--shadow-lg);
+  width:100%; max-width:600px;
+  overflow:hidden;
+}
+@media (max-width:600px) {
+  .doctor-card { border-radius:14px; max-width:100%; }
+  .doctor-panel { align-items:flex-start; min-height:unset; padding:0.75rem !important; }
+  .doctor-panel > div { width:100% !important; max-width:100% !important; }
+}
+.doctor-card-head {
+  background:linear-gradient(135deg,var(--navy),#1e3a5f);
+  padding:1.75rem 2rem;
+  display:flex; align-items:center; gap:1rem;
+}
+.doctor-card-head-icon {
+  width:52px; height:52px;
+  background:linear-gradient(135deg,#1d6fa4,#0d9488);
+  border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px;
+  box-shadow:0 4px 15px rgba(13,148,136,0.4);
+}
+.doctor-card-head-title { font-family:'DM Serif Display',serif; font-size:1.3rem; color:#fff; }
+.doctor-card-head-sub { font-size:0.72rem; color:#7dd3fc; margin-top:3px; }
+.doctor-card-body { padding:2rem; }
+
+/* MY TICKETS (doctor) */
+.my-tickets-section { margin-top:1.5rem; }
+.my-tickets-title {
+  font-size:0.72rem; font-weight:700; color:var(--text3);
+  text-transform:uppercase; letter-spacing:1.5px; margin-bottom:0.75rem;
+  padding-bottom:0.5rem; border-bottom:1px solid var(--border);
+}
+
+/* MODAL */
+.overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(15,39,68,0.65); backdrop-filter:blur(8px);
+  z-index:200; align-items:center; justify-content:center; padding:1rem;
+}
+.overlay.open { display:flex; }
+.modal {
+  background:var(--white); border-radius:16px;
+  width:100%; max-width:560px; max-height:90vh; overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+  animation:modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn { from { opacity:0; transform:scale(0.93) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.modal::-webkit-scrollbar { width:4px; }
+.modal::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.modal-head {
+  background:var(--navy); padding:1.5rem 1.75rem; border-radius:16px 16px 0 0;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.modal-head-title { font-family:'DM Serif Display',serif; font-size:1.15rem; color:#fff; display:flex; align-items:center; gap:0.6rem; }
+.modal-head-sub { font-size:0.7rem; color:#7dd3fc; font-family:'DM Sans',sans-serif; font-weight:400; }
+.btn-close {
+  background:rgba(255,255,255,0.1); border:none; color:#94a3b8;
+  width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:1rem;
+  transition:all 0.18s; display:flex; align-items:center; justify-content:center;
+}
+.btn-close:hover { background:rgba(255,255,255,0.2); color:#fff; }
+.modal-body { padding:1.75rem; display:flex; flex-direction:column; gap:1.1rem; }
+.form-group { display:flex; flex-direction:column; gap:0.4rem; }
+.form-label { font-size:0.72rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:1px; }
+.form-input, .form-select, .form-textarea {
+  background:var(--surface2); border:1.5px solid var(--border); color:var(--text);
+  border-radius:8px; padding:10px 14px; font-family:'DM Sans',sans-serif;
+  font-size:0.88rem; transition:all 0.2s; width:100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline:none; border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(29,111,164,0.1); background:var(--white);
+}
+.form-select option { background:var(--white); }
+.form-textarea { resize:vertical; min-height:90px; line-height:1.6; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; }
+.form-divider { border:none; border-top:2px dashed var(--border); margin:0.3rem 0; }
+.tech-group { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.tech-btn {
+  flex:1; min-width:100px; background:var(--surface2);
+  border:1.5px solid var(--border); color:var(--text2);
+  padding:8px 10px; border-radius:8px; font-family:'DM Sans',sans-serif;
+  font-size:0.78rem; font-weight:500; cursor:pointer; transition:all 0.18s; text-align:center;
+}
+.tech-btn:hover { border-color:var(--teal); color:var(--teal); }
+.tech-btn.selected { background:var(--teal); border-color:var(--teal); color:#fff; font-weight:600; }
+.estado-group { display:flex; gap:0.5rem; }
+.estado-btn {
+  flex:1; border:1.5px solid; padding:8px; border-radius:8px;
+  font-family:'DM Sans',sans-serif; font-size:0.75rem; font-weight:700;
+  cursor:pointer; transition:all 0.18s; text-transform:uppercase; letter-spacing:0.5px;
+}
+.estado-btn.abierto { background:var(--amber-light); border-color:var(--amber); color:var(--amber); }
+.estado-btn.proceso { background:var(--blue-light); border-color:var(--blue); color:var(--blue); }
+.estado-btn.cerrado { background:var(--green-light); border-color:var(--green); color:var(--green); }
+.estado-btn.selected { opacity:1; box-shadow:0 3px 10px rgba(0,0,0,0.12); transform:translateY(-1px); filter:brightness(0.95); }
+.estado-btn:not(.selected) { opacity:0.45; }
+.file-upload-area {
+  border:2px dashed var(--border2); border-radius:10px; padding:1.5rem;
+  text-align:center; cursor:pointer; transition:all 0.2s;
+  background:var(--surface2); position:relative;
+}
+.file-upload-area:hover { border-color:var(--blue); background:var(--blue-light); }
+.file-upload-area input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.file-upload-icon { font-size:1.8rem; margin-bottom:0.4rem; }
+.file-upload-text { font-size:0.78rem; color:var(--text2); }
+.file-upload-hint { font-size:0.68rem; color:var(--text3); margin-top:3px; }
+.file-preview { margin-top:0.75rem; border-radius:8px; overflow:hidden; max-height:160px; display:none; }
+.file-preview img { width:100%; height:160px; object-fit:cover; }
+.modal-footer { padding:1.2rem 1.75rem; border-top:1px solid var(--border); display:flex; gap:0.75rem; }
+.btn-cancel {
+  flex:1; background:transparent; border:1.5px solid var(--border2); color:var(--text2);
+  padding:10px; border-radius:8px; cursor:pointer; font-family:'DM Sans',sans-serif;
+  font-size:0.85rem; font-weight:500; transition:all 0.18s;
+}
+.btn-cancel:hover { background:var(--bg); }
+.btn-save {
+  flex:2; background:linear-gradient(135deg,var(--navy),#1d6fa4);
+  color:#fff; border:none; padding:10px; border-radius:8px;
+  font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-save:hover { filter:brightness(1.12); box-shadow:0 4px 16px rgba(15,39,68,0.35); }
+
+/* DETAIL */
+.detail-header-bar { display:flex; align-items:center; gap:1rem; margin-bottom:2rem; }
+.btn-back {
+  background:var(--white); border:1.5px solid var(--border); color:var(--text2);
+  padding:8px 16px; border-radius:8px; font-family:'DM Sans',sans-serif;
+  font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.18s;
+  display:flex; align-items:center; gap:6px;
+}
+.btn-back:hover { border-color:var(--blue); color:var(--blue); }
+.detail-grid { display:grid; grid-template-columns:1.2fr 1fr; gap:1.5rem; }
+.card { background:var(--white); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); overflow:hidden; }
+.card-head { background:var(--navy); padding:1rem 1.5rem; font-family:'DM Serif Display',serif; font-size:0.95rem; color:#fff; display:flex; align-items:center; gap:0.5rem; }
+.card-body { padding:1.5rem; }
+.info-row { display:flex; justify-content:space-between; align-items:flex-start; padding:0.65rem 0; border-bottom:1px solid var(--bg); gap:1rem; }
+.info-row:last-child { border-bottom:none; }
+.info-key { font-size:0.72rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:1px; flex-shrink:0; }
+.info-val { font-size:0.88rem; color:var(--text); text-align:right; font-weight:500; }
+.info-desc { background:var(--bg); border-radius:8px; padding:0.85rem 1rem; font-size:0.85rem; color:var(--text2); line-height:1.7; margin-top:0.75rem; }
+.btn-edit {
+  background:linear-gradient(135deg,#1d6fa4,#0d9488); color:#fff; border:none;
+  padding:10px 20px; border-radius:8px; font-family:'DM Sans',sans-serif;
+  font-weight:700; font-size:0.82rem; cursor:pointer; transition:all 0.2s; width:100%; margin-top:1rem;
+}
+.btn-edit:hover { filter:brightness(1.1); box-shadow:0 4px 16px rgba(13,148,136,0.3); }
+.btn-delete {
+  background:transparent; border:1.5px solid #fecaca; color:var(--red);
+  padding:10px; border-radius:8px; font-family:'DM Sans',sans-serif;
+  font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.18s;
+  width:100%; margin-top:0.5rem;
+}
+.btn-delete:hover { background:var(--red-light); }
+.evidencia-img { width:100%; border-radius:8px; margin-top:0.75rem; max-height:220px; object-fit:cover; border:1px solid var(--border); }
+.no-evidence { background:var(--bg); border:2px dashed var(--border); border-radius:8px; padding:2rem; text-align:center; color:var(--text3); font-size:0.8rem; margin-top:0.75rem; }
+.prio-badge { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:6px; font-size:0.75rem; font-weight:700; }
+.prio-badge.alta { background:var(--red-light); color:var(--red); }
+.prio-badge.media { background:var(--amber-light); color:var(--amber); }
+.prio-badge.baja { background:var(--green-light); color:var(--green); }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:2rem; right:2rem;
+  background:var(--navy); border-left:4px solid var(--teal);
+  color:#fff; border-radius:10px; padding:1rem 1.5rem;
+  font-size:0.85rem; box-shadow:var(--shadow-lg);
+  z-index:999; animation:toastIn 0.3s ease, toastOut 0.4s ease 2.6s forwards; max-width:320px;
+}
+@keyframes toastIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(8px); } }
+
+/* SUCCESS MODAL */
+.success-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(15,39,68,0.65); backdrop-filter:blur(8px);
+  z-index:300; align-items:center; justify-content:center;
+}
+.success-overlay.open { display:flex; }
+.success-box {
+  background:var(--white); border-radius:20px;
+  padding:2.5rem; text-align:center; max-width:380px; width:90%;
+  box-shadow:var(--shadow-lg);
+  animation:modalIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.success-icon { font-size:3.5rem; margin-bottom:1rem; }
+.success-title { font-family:'DM Serif Display',serif; font-size:1.4rem; color:var(--navy); margin-bottom:0.5rem; }
+.success-msg { font-size:0.88rem; color:var(--text2); line-height:1.6; margin-bottom:1.5rem; }
+.success-id { font-family:'JetBrains Mono',monospace; font-size:1.5rem; color:var(--blue); font-weight:600; margin:0.75rem 0; padding:0.75rem; background:var(--blue-light); border-radius:10px; }
+.btn-success-close {
+  background:linear-gradient(135deg,var(--navy),#1d6fa4);
+  color:#fff; border:none; padding:12px 32px; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-weight:700; font-size:0.9rem;
+  cursor:pointer; transition:all 0.2s; width:100%;
+}
+.btn-success-close:hover { filter:brightness(1.1); }
+
+@media (max-width:900px) {
+  .page { grid-template-columns:1fr; }
+  .sidebar { display:none; }
+  .stats-row { grid-template-columns:repeat(2,1fr); }
+  .detail-grid { grid-template-columns:1fr; }
+}
+@media (max-width:600px) {
+  .content { padding:0.75rem; }
+  header { padding:0 0.75rem; gap:0.5rem; }
+  .header-logo-text { font-size:0.95rem !important; }
+  .header-logo-sub  { font-size:0.55rem !important; }
+  .search-input { width:100%; }
+
+  /* Doctor form — columnas a una sola en móvil */
+  .doctor-panel { padding:0.5rem !important; }
+  .doctor-card-body { padding:1rem !important; }
+  .doctor-card-head { padding:1rem !important; }
+  .doctor-card-head-title { font-size:1.05rem !important; }
+  .doctor-form-row { grid-template-columns:1fr !important; }
+
+  /* Checklist más compacto */
+  .prob-check-item { padding:10px 12px; }
+  .prob-check-item label { font-size:0.9rem; }
+
+  /* Header compacto */
+  header { height:auto; min-height:56px; flex-wrap:wrap; padding:8px 12px; }
+  .header-user { gap:0.4rem; }
+  .header-user-name { font-size:0.8rem; }
+  .header-user-role { font-size:0.65rem; }
+
+  /* Botón enviar */
+  .btn-save { padding:14px !important; font-size:0.95rem !important; }
+
+  /* Config grid */
+  .config-grid { grid-template-columns:1fr !important; }
+}
+
+/* ════════ CONFIG VIEW ════════ */
+.config-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+.config-card { background:var(--white); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); overflow:hidden; }
+.config-head { background:var(--navy); padding:1rem 1.5rem; font-family:'DM Serif Display',serif; font-size:0.95rem; color:#fff; display:flex; align-items:center; gap:0.6rem; }
+.config-body { padding:1.5rem; display:flex; flex-direction:column; gap:1rem; }
+.color-row { display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--bg); gap:1rem; }
+.color-row:last-child { border-bottom:none; }
+.color-label { font-size:0.8rem; font-weight:600; color:var(--text2); }
+.color-sub { font-size:0.68rem; color:var(--text3); margin-top:2px; }
+.color-picker-wrap { display:flex; align-items:center; gap:0.5rem; }
+.color-picker-wrap input[type=color] { width:40px; height:32px; border:2px solid var(--border); border-radius:8px; cursor:pointer; padding:2px; background:var(--white); }
+.color-hex { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text3); width:60px; }
+.theme-presets { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.theme-preset-btn { padding:7px 14px; border-radius:8px; border:2px solid transparent; font-size:0.75rem; font-weight:700; cursor:pointer; transition:all 0.18s; font-family:'DM Sans',sans-serif; }
+.theme-preset-btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+/* Users table */
+.users-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+.users-table th { text-align:left; padding:8px 10px; font-size:0.68rem; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid var(--border); }
+.users-table td { padding:10px; border-bottom:1px solid var(--bg); vertical-align:middle; }
+.users-table tr:last-child td { border-bottom:none; }
+.users-table tr:hover td { background:var(--bg); }
+.role-badge { font-size:0.62rem; font-weight:700; padding:3px 9px; border-radius:5px; text-transform:uppercase; letter-spacing:0.5px; }
+.role-badge.admin { background:rgba(13,148,136,0.12); color:var(--teal); border:1px solid rgba(13,148,136,0.25); }
+.role-badge.doctor { background:var(--blue-light); color:var(--blue); border:1px solid rgba(29,111,164,0.2); }
+.btn-icon { background:transparent; border:1.5px solid var(--border); color:var(--text3); width:30px; height:30px; border-radius:6px; cursor:pointer; transition:all 0.18s; font-size:0.85rem; display:inline-flex; align-items:center; justify-content:center; }
+.btn-icon:hover { border-color:var(--red); color:var(--red); background:var(--red-light); }
+.btn-icon.edit:hover { border-color:var(--blue); color:var(--blue); background:var(--blue-light); }
+.btn-add-user { background:linear-gradient(135deg,var(--navy),var(--blue)); color:#fff; border:none; padding:9px 18px; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.82rem; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:6px; }
+.btn-add-user:hover { filter:brightness(1.12); box-shadow:0 4px 14px rgba(29,111,164,0.35); }
+.config-section-full { grid-column:1/-1; }
+.reset-btn { background:transparent; border:1.5px solid #fecaca; color:var(--red); padding:9px 18px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.18s; }
+.reset-btn:hover { background:var(--red-light); }
+.system-info-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--bg); font-size:0.82rem; }
+.system-info-row:last-child { border-bottom:none; }
+.system-info-key { color:var(--text3); font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.8px; }
+.system-info-val { color:var(--text); font-family:'JetBrains Mono',monospace; font-size:0.78rem; }
+.font-select-group { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.font-btn { flex:1; min-width:80px; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface2); font-size:0.78rem; cursor:pointer; transition:all 0.18s; text-align:center; color:var(--text2); }
+.font-btn:hover { border-color:var(--blue); color:var(--blue); }
+.font-btn.selected { border-color:var(--blue); background:var(--blue-light); color:var(--blue); font-weight:700; }
+
+
+/* ── TICKETS ABIERTOS PARPADEAN ── */
+@keyframes pulseOpen {
+  0%,100% { border-color:var(--border); box-shadow:var(--shadow); }
+  50%      { border-color:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,0.18), 0 4px 20px rgba(245,158,11,0.15); }
+}
+.ticket-card.abierto-pulse {
+  animation: pulseOpen 2s ease-in-out infinite;
+}
+.ticket-card.abierto-pulse .tc-priority.alta {
+  animation: pulseOpen 1.2s ease-in-out infinite;
+}
+
+/* ── GESTIÓN DE ÁREAS ── */
+.add-area-row { display:flex; gap:0.5rem; margin-top:0.75rem; padding:0 1rem 1rem; }
+.add-area-row input {
+  flex:1; background:var(--surface2); border:1.5px solid var(--border);
+  border-radius:8px; padding:9px 12px; font-family:'DM Sans',sans-serif;
+  font-size:0.85rem; color:var(--text); transition:all 0.2s;
+}
+.add-area-row input:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(29,111,164,0.1); }
+.area-inline-edit {
+  display:flex; gap:4px; align-items:center; width:100%;
+}
+.area-inline-edit input {
+  flex:1; background:var(--white); border:1.5px solid var(--blue);
+  border-radius:6px; padding:5px 9px; font-family:'DM Sans',sans-serif;
+  font-size:0.85rem; color:var(--text);
+}
+
+
+/* ── CHECKLIST DE PROBLEMAS ── */
+.prob-checklist { display:flex; flex-direction:column; gap:0.35rem; margin-bottom:0.5rem; }
+.prob-check-item {
+  display:flex; align-items:center; gap:0.6rem;
+  padding:8px 12px; border-radius:8px; border:1.5px solid var(--border);
+  background:var(--bg); cursor:pointer; transition:all 0.15s; user-select:none;
+}
+.prob-check-item:hover { border-color:var(--blue); background:var(--blue-light); }
+.prob-check-item.checked { border-color:var(--blue); background:var(--blue-light); }
+.prob-check-item input[type=checkbox] {
+  width:16px; height:16px; accent-color:var(--blue);
+  flex-shrink:0; cursor:pointer;
+}
+.prob-check-item label { font-size:0.85rem; font-weight:500; color:var(--text); cursor:pointer; flex:1; }
+.prob-otros-box {
+  margin-top:0.4rem;
+  display:none;
+}
+.prob-otros-box textarea {
+  width:100%; background:var(--surface2); border:1.5px solid var(--blue);
+  border-radius:8px; padding:10px 12px; font-family:'DM Sans',sans-serif;
+  font-size:0.85rem; color:var(--text); resize:vertical; min-height:70px;
+  transition:all 0.2s; box-sizing:border-box;
+}
+.prob-otros-box textarea:focus { outline:none; box-shadow:0 0 0 3px rgba(29,111,164,0.1); }
+
+</style>
+</head>
+<body>
+
+<!-- ════════════════ LOGIN SCREEN ════════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">🏥</div>
+      <span class="login-logo-name">HelpDesk Hospitalario</span>
+      <span class="login-logo-sub">Soporte Técnico TI — Perú</span>
+    </div>
+
+    <div id="loginError" class="login-error">❌ DNI o contraseña incorrectos. Intente nuevamente.</div>
+
+    <div>
+      <label class="login-label">DNI (Usuario)</label>
+      <input class="login-input" id="loginDni" type="text" placeholder="Ingrese su DNI o usuario" autocomplete="username"
+        oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+        style="text-transform:uppercase;letter-spacing:0.05em">
+    </div>
+    <div>
+      <label class="login-label">Contraseña</label>
+      <input class="login-input" id="loginPass" type="password" placeholder="Ingrese su contraseña"
+        oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+        onkeydown="if(event.key==='Enter')doLogin()"
+        style="text-transform:uppercase;letter-spacing:0.05em">
+    </div>
+    <button class="login-btn" onclick="doLogin()">🔐 Ingresar al Sistema</button>
+
+    <div style="margin-top:1.5rem;text-align:center;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:1px;">
+      <span id="loginFootText">Sistema de Gestión de Incidencias TI · Perú 🇵🇪</span>
+    </div>
+    <div style="margin-top:0.75rem;text-align:center;">
+      <button onclick="emergencyReset()" style="background:transparent;border:none;color:rgba(255,255,255,0.12);font-size:0.62rem;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:1px;text-decoration:underline;padding:4px 8px;" title="Usar solo si no puedes ingresar">restablecer sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ APP SCREEN ════════════════ -->
+<div id="appScreen">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🏥</div>
+      <div>
+        <div class="logo-name">HelpDesk Hospitalario</div>
+        <span class="logo-sub">Soporte Técnico — Perú</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-badge">
+        <span>👤</span>
+        <div>
+          <span class="user-badge-name" id="headerUserName">—</span>
+          <span class="user-badge-role" id="headerUserRole">—</span>
+        </div>
+      </div>
+      <button id="headerNewBtn" class="btn-primary" onclick="openNewTicket()" style="display:none">
+        <span>＋</span> Nuevo Ticket
+      </button>
+      <button id="headerRefreshBtn" onclick="manualRefresh()" style="display:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#94a3b8;padding:7px 13px;border-radius:8px;font-family:DM Sans,sans-serif;font-size:0.78rem;cursor:pointer;transition:all 0.2s" title="Actualizar datos desde Google Sheets">
+        🔄 Actualizar
+      </button>
+      <button class="btn-logout" onclick="doLogout()">↩ Salir</button>
+    </div>
+  </header>
+
+  <!-- ── ADMIN LAYOUT ── -->
+  <div id="adminLayout" style="display:none">
+    <div class="page">
+      <aside class="sidebar">
+        <div class="sidebar-section-title">Navegación</div>
+        <button class="nav-item active" onclick="showView('dashboard',this)"><span class="nav-icon">📊</span> Dashboard</button>
+        <button class="nav-item" onclick="showView('tickets',this)"><span class="nav-icon">🎫</span> Todos los Tickets</button>
+        <button class="nav-item" onclick="filterAndShow('Abierto',this)"><span class="nav-icon">🔴</span> Abiertos</button>
+        <button class="nav-item" onclick="filterAndShow('En Proceso',this)"><span class="nav-icon">🔵</span> En Proceso</button>
+        <button class="nav-item" onclick="filterAndShow('Cerrado',this)"><span class="nav-icon">🟢</span> Cerrados</button>
+        <div class="sidebar-section-title" style="margin-top:0.5rem">Por Área</div>
+        <button class="nav-item" onclick="filterArea('Hospitalización',this)"><span class="nav-icon">🛏️</span> Hospitalización</button>
+        <button class="nav-item" onclick="filterArea('Gineco-Obstetricia',this)"><span class="nav-icon">👶</span> Gineco-Obst.</button>
+        <button class="nav-item" onclick="filterArea('Farmacia',this)"><span class="nav-icon">💊</span> Farmacia</button>
+        <button class="nav-item" onclick="filterArea('Emergencia',this)"><span class="nav-icon">🚨</span> Emergencia</button>
+        <button class="nav-item" onclick="filterArea('Laboratorio',this)"><span class="nav-icon">🔬</span> Laboratorio</button>
+        <div class="sidebar-section-title" style="margin-top:0.5rem">Sistema</div>
+        <button class="nav-item" id="navConfig" onclick="showView('config',this)"><span class="nav-icon">⚙️</span> Configuración</button>
+        <div class="sidebar-stats" id="sidebarStats">
+          <div class="sidebar-stat"><span class="ss-label">Abiertos</span><span class="ss-val open" id="ss-open">0</span></div>
+          <div class="sidebar-stat"><span class="ss-label">En Proceso</span><span class="ss-val proc" id="ss-proc">0</span></div>
+          <div class="sidebar-stat"><span class="ss-label">Cerrados</span><span class="ss-val done" id="ss-done">0</span></div>
+        </div>
+      </aside>
+      <main class="content">
+        <!-- DASHBOARD -->
+        <div class="view active" id="view-dashboard">
+          <div class="stats-row">
+            <div class="stat-box s-total"><div class="stat-n" id="st-total">0</div><div class="stat-label-box">Total Tickets</div></div>
+            <div class="stat-box s-open"><div class="stat-n" id="st-open">0</div><div class="stat-label-box">Abiertos</div></div>
+            <div class="stat-box s-proc"><div class="stat-n" id="st-proc">0</div><div class="stat-label-box">En Proceso</div></div>
+            <div class="stat-box s-done"><div class="stat-n" id="st-done">0</div><div class="stat-label-box">Cerrados</div></div>
+          </div>
+          <div class="section-header">
+            <h2 class="section-title">Tickets Recientes</h2>
+            <button class="btn-primary" onclick="showView('tickets',document.querySelector('#adminLayout .nav-item:nth-child(3)'))">Ver todos →</button>
+          </div>
+          <div class="tickets-grid" id="recentTickets"></div>
+        </div>
+        <!-- ALL TICKETS -->
+        <div class="view" id="view-tickets">
+          <div class="section-header">
+            <h2 class="section-title" id="ticketsViewTitle">Todos los Tickets</h2>
+            <input type="text" class="search-input" id="searchBar" placeholder="🔍 Buscar..." oninput="renderAll()">
+          </div>
+          <div class="filters-row" style="margin-bottom:1.2rem">
+            <button class="pill active" onclick="setPill('todos',this)">Todos</button>
+            <button class="pill" onclick="setPill('Abierto',this)">Abiertos</button>
+            <button class="pill" onclick="setPill('En Proceso',this)">En Proceso</button>
+            <button class="pill" onclick="setPill('Cerrado',this)">Cerrados</button>
+            <button class="pill" onclick="setPill('alta',this)">🔴 Alta</button>
+            <button class="pill" onclick="setPill('media',this)">🟡 Media</button>
+            <button class="pill" onclick="setPill('baja',this)">🟢 Baja</button>
+          </div>
+          <div class="tickets-grid" id="allTickets"></div>
+        </div>
+        <!-- DETAIL -->
+        <div class="view" id="view-detail">
+          <div class="detail-header-bar">
+            <button class="btn-back" onclick="backToList()">← Volver</button>
+            <div id="detailTicketId" style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--blue);font-weight:600;"></div>
+          </div>
+          <div class="detail-grid" id="detailContent"></div>
+        </div>
+        <!-- CONFIG VIEW -->
+        <div class="view" id="view-config">
+          <div id="configContent"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ── DOCTOR LAYOUT ── -->
+  <div id="doctorLayout" style="display:none">
+    <div class="doctor-panel" style="padding:1.5rem 1rem">
+      <div style="width:100%;max-width:680px">
+        <div class="doctor-card" style="margin-bottom:1.5rem">
+          <div class="doctor-card-head">
+            <div class="doctor-card-head-icon">📋</div>
+            <div>
+              <div class="doctor-card-head-title">Registrar Incidencia Técnica</div>
+              <div class="doctor-card-head-sub">Complete el formulario para generar su ticket de soporte</div>
+            </div>
+          </div>
+          <div class="doctor-card-body">
+            <div style="display:flex;flex-direction:column;gap:1rem">
+
+              <div class="doctor-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem">
+                <div class="form-group">
+                  <label class="form-label">Doctor / Solicitante *</label>
+                  <input class="form-input" id="d-doc" placeholder="Dr. Juan Pérez">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Prioridad *</label>
+                  <select class="form-select" id="d-prio">
+                    <option value="media">🟡 Media</option>
+                    <option value="alta">🔴 Alta — Urgente</option>
+                    <option value="baja">🟢 Baja</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="doctor-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem">
+                <div class="form-group">
+                  <label class="form-label">Área / Servicio *</label>
+                  <select class="form-select" id="d-area">
+                    <option value="">Seleccionar área...</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Categoría *</label>
+                  <select class="form-select" id="d-cat">
+                    <option value="">Seleccionar categoría...</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Descripción del Problema *</label>
+                <div class="prob-checklist" id="d-prob-list"></div>
+                <div class="prob-otros-box" id="d-prob-otros-box">
+                  <textarea id="d-prob-otros" placeholder="Describa el problema..." oninput="syncProbHidden('d-prob-list','d-prob-otros-box','d-prob-otros')"></textarea>
+                </div>
+                <input type="hidden" id="d-prob">
+              </div>
+
+              <button class="btn-save" style="margin-top:0.5rem" onclick="saveDoctorTicket()">
+                🎫 Enviar Ticket de Soporte
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- /appScreen -->
+
+<!-- MODAL ADMIN: EDITAR/NUEVO TICKET -->
+<div class="overlay" id="ticketOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-head-title">🎫 <span id="modalTitleText">Registrar Incidencia</span></div>
+        <div class="modal-head-sub">Complete todos los campos requeridos *</div>
+      </div>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--blue-light);border-radius:8px;padding:0.75rem 1rem;font-size:0.78rem;color:var(--blue);font-weight:600;">
+        👨‍⚕️ DATOS DEL SOLICITANTE
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Doctor / Solicitante *</label>
+          <input class="form-input" id="f-doc" placeholder="Dr. Juan Pérez">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridad *</label>
+          <select class="form-select" id="f-prio">
+            <option value="media">🟡 Media</option>
+            <option value="alta">🔴 Alta — Urgente</option>
+            <option value="baja">🟢 Baja</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Área / Servicio *</label>
+          <select class="form-select" id="f-area">
+            <option value="">Seleccionar área...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría *</label>
+          <select class="form-select" id="f-cat">
+            <option value="">Seleccionar categoría...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción del problema *</label>
+        <div class="prob-checklist" id="f-prob-list"></div>
+        <div class="prob-otros-box" id="f-prob-otros-box">
+          <textarea id="f-prob-otros" placeholder="Describa el problema..." oninput="syncProbHidden('f-prob-list','f-prob-otros-box','f-prob-otros')"></textarea>
+        </div>
+        <input type="hidden" id="f-prob">
+      </div>
+      <hr class="form-divider">
+      <div style="background:#f0fdf4;border-radius:8px;padding:0.75rem 1rem;font-size:0.78rem;color:var(--green);font-weight:600;">
+        🔧 ATENCIÓN TÉCNICA <span style="font-weight:400;color:var(--text3)">(completar al dar solución)</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Técnico(s) Asignado(s) <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">(puedes seleccionar más de uno)</span></label>
+        <div class="tech-group" id="techGroup">
+          <button type="button" class="tech-btn" data-tech="Aldo Benjamín" onclick="selectTech(this,'Aldo Benjamín')">👤 Aldo Benjamín</button>
+          <button type="button" class="tech-btn" data-tech="Jhon Bustamante" onclick="selectTech(this,'Jhon Bustamante')">👤 Jhon Bustamante</button>
+          <button type="button" class="tech-btn" data-tech="Manuel" onclick="selectTech(this,'Manuel')">👤 Manuel</button>
+        </div>
+        <input type="hidden" id="f-tec" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Procedimiento Ejecutado</label>
+        <textarea class="form-textarea" id="f-proc" placeholder="Ej: Cambio de toner, formateo de PC, reinstalación de Windows..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado del Ticket</label>
+        <div class="estado-group">
+          <button type="button" class="estado-btn abierto selected" onclick="selectEstado(this,'Abierto')" id="ebAbierto">🔴 Abierto</button>
+          <button type="button" class="estado-btn proceso" onclick="selectEstado(this,'En Proceso')" id="ebProceso">🔵 En Proceso</button>
+          <button type="button" class="estado-btn cerrado" onclick="selectEstado(this,'Cerrado')" id="ebCerrado">🟢 Cerrado</button>
+        </div>
+        <input type="hidden" id="f-estado" value="Abierto">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Evidencia (foto)</label>
+        <div class="file-upload-area" id="uploadArea">
+          <input type="file" accept="image/*" id="f-foto" onchange="previewImage(this)" style="z-index:10">
+          <div class="file-upload-icon">📷</div>
+          <div class="file-upload-text">Haz clic o arrastra una foto aquí</div>
+          <div class="file-upload-hint">JPG, PNG, WEBP — Max 3MB</div>
+        </div>
+        <div class="file-preview" id="filePreview" style="display:none;position:relative">
+          <img id="previewImg" src="" alt="Evidencia" style="pointer-events:none">
+          <button type="button" onclick="removePhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20" title="Quitar foto">✕</button>
+          <button type="button" onclick="document.getElementById('f-foto').click()" style="position:absolute;bottom:6px;right:6px;background:rgba(29,111,164,0.9);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.72rem;cursor:pointer;z-index:20;font-family:inherit">📷 Cambiar foto</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveTicket()">💾 Guardar Ticket</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL (admin config) -->
+<div class="overlay" id="userOverlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-head-title">👤 <span id="userModalTitle">Nuevo Usuario</span></div>
+        <div class="modal-head-sub">Complete los datos del usuario</div>
+      </div>
+      <button class="btn-close" onclick="closeUserModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre completo *</label>
+        <input class="form-input" id="u-nombre" placeholder="Dr. Juan Pérez">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">DNI (usuario) *</label>
+          <input class="form-input" id="u-dni" placeholder="Ej: 12345678 o admin" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña *</label>
+          <input class="form-input" id="u-clave" placeholder="Contraseña" type="text">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cargo / Especialidad</label>
+        <input class="form-input" id="u-cargo" placeholder="Ej: Médico Cirujano, Estadístico...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol *</label>
+        <select class="form-select" id="u-rol">
+          <option value="doctor">👨‍⚕️ Doctor / Trabajador (solo registra tickets)</option>
+          <option value="admin">🔧 Administrador (acceso total)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeUserModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveUser()">💾 Guardar Usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL (doctor) -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <div class="success-icon">✅</div>
+    <div class="success-title">¡Ticket Enviado!</div>
+    <div class="success-msg">Su incidencia fue registrada exitosamente.<br>El equipo técnico atenderá su solicitud pronto.</div>
+    <div class="success-id" id="successId">TK-0001</div>
+    <div style="font-size:0.78rem;color:var(--text3);margin-bottom:1.5rem">Guarde este número para hacer seguimiento</div>
+    <button class="btn-success-close" onclick="closeSuccess()">👍 Entendido</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  USUARIOS DEL SISTEMA
+// ════════════════════════════════════════════════
+// ─── USUARIOS BASE (siempre disponibles) ───────────────────────
+// ── USUARIOS BASE — hardcodeados, nunca se corrompen ──────────────
+// ── Solo 1 usuario fijo en código: el admin principal (para emergencias) ──
+const SUPER_ADMIN = {
+  dni:'46738419', nombre:'Aldo Benjamín', rol:'admin', clave:'46738419', cargo:'Técnico TI'
+};
+
+// Usuarios iniciales que se guardan en localStorage la primera vez
+const INITIAL_USERS = {
+  '46738419': SUPER_ADMIN,
+  'ADMIN': { nombre:'Usuario General', dni:'ADMIN', rol:'doctor', clave:'ADMIN', cargo:'Personal Hospital' },
+};
+
+function loadUsers() {
+  try {
+    const raw = localStorage.getItem('hd_users_v2');
+    if (raw) {
+      const stored = JSON.parse(raw);
+      // Siempre asegurar que el super admin esté (seguridad)
+      stored[SUPER_ADMIN.dni] = SUPER_ADMIN;
+      return stored;
+    }
+  } catch(e) {}
+  // Primera vez: cargar usuarios iniciales
+  const initial = { ...INITIAL_USERS };
+  localStorage.setItem('hd_users_v2', JSON.stringify(initial));
+  return { ...initial };
+}
+
+let USERS = loadUsers();
+
+function saveUsers() {
+  // Guardar TODOS los usuarios (incluyendo editados) pero siempre con super admin
+  USERS[SUPER_ADMIN.dni] = SUPER_ADMIN;
+  localStorage.setItem('hd_users_v2', JSON.stringify(USERS));
+}
+
+// ════════════════════════════════════════════════
+//  ESTADO
+// ════════════════════════════════════════════════
+let currentUser = null;
+let tickets = JSON.parse(localStorage.getItem('hd_tickets_v2') || '[]');
+let counter  = parseInt(localStorage.getItem('hd_counter_v2') || '0');
+
+const DEFAULT_AREAS = [
+  'Hospitalización','Gineco-Obstetricia','Farmacia','Emergencia',
+  'Laboratorio','Cirugía','Pediatría','UCI / Cuidados Intensivos',
+  'Traumatología','Cardiología','Radiología / Imágenes',
+  'Consultorios Externos','Administración','Estadística / HCIS','Otro'
+];
+let areas = JSON.parse(localStorage.getItem('hd_areas_v2') || 'null') || [...DEFAULT_AREAS];
+function saveAreas() { localStorage.setItem('hd_areas_v2', JSON.stringify(areas)); }
+
+const DEFAULT_PROBLEMS = [
+  'CAMBIO DE TONER','RECARGA DE TINTA','ATASCO DE PAPEL',
+  'NUEVO PAPEL TERMICO','SIN INTERNET','NO ENCIENDE','NO FUNCIONA','OTROS'
+];
+let problems = JSON.parse(localStorage.getItem('hd_problems_v2') || 'null') || [...DEFAULT_PROBLEMS];
+function saveProblems() { localStorage.setItem('hd_problems_v2', JSON.stringify(problems)); }
+
+const DEFAULT_CATEGORIES = [
+  'Pakamuros','Impresora','Computadora','Laptop','Internet','Red',
+  'Monitor','CPU','Teclado / Mouse','Escáner','UPS / Regulador','Proyector','Otros'
+];
+let categories = JSON.parse(localStorage.getItem('hd_categories_v2') || 'null') || [...DEFAULT_CATEGORIES];
+function saveCategories() { localStorage.setItem('hd_categories_v2', JSON.stringify(categories)); }
+
+function populateCatSelects(currentVal) {
+  ['d-cat','f-cat'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = currentVal !== undefined ? currentVal : sel.value;
+    sel.innerHTML = '<option value="">Seleccionar categoría...</option>' +
+      categories.map(c => `<option${c===prev?' selected':''}>${c}</option>`).join('');
+  });
+}
+
+function renderProbChecklist(listId, otrosBoxId, otrosId, currentVal) {
+  const el = document.getElementById(listId);
+  if (!el) return;
+  // Parsear valores guardados separados por coma
+  const saved = (currentVal||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const otrosTexto = saved.find(s => !problems.includes(s) && s !== 'OTROS') || '';
+  const tieneOtros = saved.includes('OTROS') || otrosTexto !== '';
+
+  el.innerHTML = problems.map((p, i) => {
+    const checked = (p === 'OTROS') ? tieneOtros : saved.includes(p);
+    return `<div class="prob-check-item${checked?' checked':''}" id="${listId}-item-${i}"
+      onclick="toggleProb('${listId}','${otrosBoxId}','${otrosId}',${i},'${p.replace(/'/g,"\\'")}')">
+      <input type="checkbox" ${checked?'checked':''} onclick="event.stopPropagation();toggleProb('${listId}','${otrosBoxId}','${otrosId}',${i},'${p.replace(/'/g,"\\'")}')">
+      <label>${p}</label>
+    </div>`;
+  }).join('');
+
+  const otrosBox = document.getElementById(otrosBoxId);
+  if (otrosBox) {
+    otrosBox.style.display = tieneOtros ? 'block' : 'none';
+    if (otrosTexto) document.getElementById(otrosId).value = otrosTexto;
+  }
+  syncProbHidden(listId, otrosBoxId, otrosId);
+}
+
+function toggleProb(listId, otrosBoxId, otrosId, idx, value) {
+  const item = document.getElementById(listId+'-item-'+idx);
+  if (!item) return;
+  const cb = item.querySelector('input[type=checkbox]');
+  // Toggle
+  const nowChecked = !item.classList.contains('checked');
+  item.classList.toggle('checked', nowChecked);
+  cb.checked = nowChecked;
+  // OTROS: mostrar/ocultar caja
+  if (value === 'OTROS') {
+    const otrosBox = document.getElementById(otrosBoxId);
+    otrosBox.style.display = nowChecked ? 'block' : 'none';
+    if (nowChecked) { document.getElementById(otrosId).focus(); }
+    else { document.getElementById(otrosId).value = ''; }
+  }
+  syncProbHidden(listId, otrosBoxId, otrosId);
+}
+
+// selectProb kept for backward compat
+function selectProb(listId, otrosBoxId, otrosId, value, clickedEl) {
+  const idx = parseInt(clickedEl.id.replace(listId+'-item-',''));
+  toggleProb(listId, otrosBoxId, otrosId, idx, value);
+}
+
+function syncProbHidden(listId, otrosBoxId, otrosId) {
+  const hiddenId = listId === 'd-prob-list' ? 'd-prob' : 'f-prob';
+  const hidden = document.getElementById(hiddenId);
+  if (!hidden) return;
+  const parts = [];
+  document.querySelectorAll('#'+listId+' .prob-check-item.checked label').forEach(lbl => {
+    const txt = lbl.textContent.trim();
+    if (txt !== 'OTROS') parts.push(txt);
+  });
+  // Si OTROS está marcado, añadir texto libre
+  const allCheckedLabels = Array.from(document.querySelectorAll('#'+listId+' .prob-check-item.checked label')).map(l=>l.textContent.trim());
+  if (allCheckedLabels.includes('OTROS')) {
+    const otrosText = (document.getElementById(otrosId)||{}).value||'';
+    if (otrosText.trim()) parts.push(otrosText.trim());
+    else parts.push('OTROS');
+  }
+  hidden.value = parts.join(', ');
+}
+
+
+function populateAreaSelects(currentVal) {
+  ['d-area','f-area'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = currentVal !== undefined ? currentVal : sel.value;
+    sel.innerHTML = '<option value="">Seleccionar área...</option>' +
+      areas.map(a => `<option${a===prev?' selected':''}>${a}</option>`).join('');
+  });
+}
+let activeFilter = 'todos';
+let activeAreaFilter = null;
+let editingId = null;
+let currentDetailId = null;
+let pendingPhoto = null;
+let editingUserDni = null;
+
+// ════════════════════════════════════════════════
+//  GOOGLE SHEETS API
+// ════════════════════════════════════════════════
+// URL hardcodeada — funciona en TODOS los dispositivos sin configuración
+const SCRIPT_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbzZfVLrq5wvlskC7nskdq98__ratx0q3wH5M_qlPNqCyXdNtaSxlM_59F5m7RwwjWeC/exec';
+let SCRIPT_URL = localStorage.getItem('hd_script_url') || SCRIPT_URL_DEFAULT;
+let sheetsSyncEnabled = true; // siempre activo
+
+// Smart API call — usa fetch si está en https://, JSONP si es file://
+// ── Todo usa JSONP — funciona desde file://, Netlify, cualquier origen ──
+function sheetsCall(params) {
+  return sheetsRead(params);
+}
+
+function sheetsRead(params) {
+  return new Promise((resolve) => {
+    if (!SCRIPT_URL) { resolve(null); return; }
+    const cbName = 'hd_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const url = SCRIPT_URL + '?' +
+      Object.entries(params)
+        .map(([k,v]) => encodeURIComponent(k) + '=' + encodeURIComponent(typeof v==='object' ? JSON.stringify(v) : String(v)))
+        .join('&') +
+      '&callback=' + cbName +
+      '&_t=' + Date.now(); // cache-buster
+
+    window[cbName] = function(data) {
+      delete window[cbName];
+      try { if(script.parentNode) script.parentNode.removeChild(script); } catch(e){}
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = function() {
+      delete window[cbName];
+      try { if(script.parentNode) script.parentNode.removeChild(script); } catch(e){}
+      resolve(null);
+    };
+    document.head.appendChild(script);
+
+    // Timeout 15s
+    setTimeout(function() {
+      if (window[cbName]) {
+        delete window[cbName];
+        try { if(script.parentNode) script.parentNode.removeChild(script); } catch(e){}
+        resolve(null);
+      }
+    }, 15000);
+  });
+}
+
+
+function syncTicketToSheets(ticket) {
+  if (!sheetsSyncEnabled) return;
+  sheetsCall({ action: 'saveTicket', data: ticket });
+}
+
+async function syncAtencionToSheets(ticket) {
+  if (!sheetsSyncEnabled) return;
+  // PASO 1: guardar todos los datos SIN foto por JSONP (seguro, sin límite práctico)
+  const atencion = {
+    id:            ticket.id,
+    fechaRegistro: ticket.fecha + ' ' + ticket.hora,
+    fechaAtencion: ticket.editado || '',
+    doctor:        ticket.doctor,
+    area:          ticket.area,
+    categoria:     ticket.categoria,
+    problema:      ticket.problema,
+    tecnico:       ticket.tecnico || '',
+    procedimiento: ticket.procedimiento || '',
+    estado:        ticket.estado,
+    prioridad:     ticket.prioridad || '',
+    tieneFoto:     ticket.foto ? 'Sí' : 'No',
+    fotoBase64:    ''
+  };
+  sheetsCall({ action: 'saveAtencion', data: atencion });
+
+  // PASO 2: si hay foto, subirla por separado con acción uploadFoto
+  if (ticket.foto && ticket.foto.startsWith('data:')) {
+    try {
+      const fotoComprimida = await comprimirFoto(ticket.foto, 350, 0.45);
+      // Dividir en chunks de 6000 chars para evitar límite de URL
+      const chunks = [];
+      for (let i = 0; i < fotoComprimida.length; i += 6000) {
+        chunks.push(fotoComprimida.slice(i, i + 6000));
+      }
+      const total = chunks.length;
+      for (let i = 0; i < chunks.length; i++) {
+        await sheetsCall({
+          action:  'uploadFotoChunk',
+          id:      ticket.id,
+          chunk:   chunks[i],
+          idx:     i,
+          total:   total
+        });
+      }
+    } catch(e) { console.warn('Error subiendo foto:', e); }
+  }
+}
+
+// Comprime imagen a canvas y devuelve base64 pequeño
+function comprimirFoto(base64, maxPx, calidad) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = function() {
+      try {
+        let w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else       { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', calidad));
+      } catch(e) { reject(e); }
+    };
+    img.onerror = reject;
+    img.src = base64;
+  });
+}
+
+function deleteTicketFromSheets(id) {
+  if (!sheetsSyncEnabled) return;
+  sheetsCall({ action: 'deleteTicket', id });
+}
+
+function syncUserToSheets(user) {
+  if (!sheetsSyncEnabled) return;
+  sheetsCall({ action: 'saveUser', data: user });
+}
+
+function deleteUserFromSheets(dni) {
+  if (!sheetsSyncEnabled) return;
+  sheetsCall({ action: 'deleteUser', dni });
+}
+
+async function loadFromSheets(silent=false) {
+  if (!sheetsSyncEnabled) return false;
+  if (!silent) showSyncBanner('⏳ Cargando datos desde Google Sheets...');
+  const r = await sheetsRead({ action: 'getAll' });
+  if (!r || !r.ok) { hideSyncBanner(); return false; }
+
+  // Detect new tickets vs what we have
+  const prevCount = tickets.length;
+  const prevIds = new Set(tickets.map(t => t.id));
+
+  // Load tickets
+  if (r.tickets && r.tickets.length >= 0) {
+    tickets = r.tickets;
+    counter = r.counter || 0;
+    save();
+  }
+  // Load users
+  if (r.usuarios && Object.keys(r.usuarios).length > 0) {
+    if (r.usuarios && Object.keys(r.usuarios).length > 0) {
+      USERS = { ...r.usuarios };
+    }
+    USERS[SUPER_ADMIN.dni] = SUPER_ADMIN; // siempre mantener super admin
+    saveUsers();
+  }
+
+  hideSyncBanner();
+
+  // Refresh UI if admin is logged in
+  if (currentUser && currentUser.rol === 'admin') {
+    updateStats();
+    renderRecent();
+    renderAll();
+    // Notify if new tickets arrived
+    const newTickets = tickets.filter(t => !prevIds.has(t.id));
+    if (silent && newTickets.length > 0) {
+      newTickets.forEach(t => {
+        toast(`🔔 Nuevo ticket: ${t.id} — ${t.area}`, 'new');
+      });
+    }
+  }
+
+  return true;
+}
+
+// Auto-refresh every 30 seconds when admin is logged in
+let autoRefreshInterval = null;
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  if (!sheetsSyncEnabled) return;
+  autoRefreshInterval = setInterval(async () => {
+    if (currentUser && currentUser.rol === 'admin') {
+      await loadFromSheets(true); // silent=true, only toasts if new tickets
+    }
+  }, 30000); // 30 segundos
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+  }
+}
+
+async function manualRefresh() {
+  const btn = document.getElementById('headerRefreshBtn');
+  if (btn) { btn.textContent = '⏳ Actualizando...'; btn.disabled = true; }
+  const loaded = await loadFromSheets(false);
+  if (btn) { btn.textContent = '🔄 Actualizar'; btn.disabled = false; }
+  if (!loaded) toast('⚠️ Sin conexión con Google Sheets','warn');
+}
+
+function showSyncBanner(msg) {
+  let b = document.getElementById('syncBanner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'syncBanner';
+    b.style.cssText = 'position:fixed;top:62px;left:0;right:0;background:linear-gradient(90deg,#1d6fa4,#0d9488);color:#fff;text-align:center;padding:8px;font-size:0.82rem;z-index:50;font-family:DM Sans,sans-serif;';
+    document.body.appendChild(b);
+  }
+  b.textContent = msg;
+  b.style.display = 'block';
+}
+function hideSyncBanner() {
+  const b = document.getElementById('syncBanner');
+  if (b) b.style.display = 'none';
+}
+
+function save() {
+  localStorage.setItem('hd_tickets_v2', JSON.stringify(tickets));
+  localStorage.setItem('hd_counter_v2', String(counter));
+}
+
+// ════════════════════════════════════════════════
+//  LOGIN / LOGOUT
+// ════════════════════════════════════════════════
+function doLogin() {
+  const dni  = document.getElementById('loginDni').value.trim().toUpperCase();
+  const pass = document.getElementById('loginPass').value.toUpperCase();
+  const err  = document.getElementById('loginError');
+
+  // Recargar usuarios frescos desde localStorage
+  USERS = loadUsers();
+
+  // Buscar usuario ignorando mayúsculas/minúsculas
+  const user = USERS[dni] || Object.values(USERS).find(u => u.dni.toUpperCase() === dni);
+  if (!user || user.clave.toUpperCase() !== pass) {
+    err.style.display = 'block';
+    document.getElementById('loginPass').value = '';
+    setTimeout(() => err.style.display = 'none', 3500);
+    return;
+  }
+
+  currentUser = user;
+  err.style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('headerUserName').textContent = user.nombre;
+  document.getElementById('headerUserRole').textContent = user.rol === 'admin' ? '🔧 Administrador' : '👨‍⚕️ Doctor / Solicitante';
+
+  if (user.rol === 'admin') {
+    document.getElementById('adminLayout').style.display = 'block';
+    document.getElementById('doctorLayout').style.display = 'none';
+    document.getElementById('headerNewBtn').style.display = 'flex';
+    document.getElementById('headerRefreshBtn').style.display = sheetsSyncEnabled ? 'block' : 'none';
+    applyStoredTheme();
+    populateAreaSelects();
+    populateCatSelects();
+    renderProbChecklist('f-prob-list','f-prob-otros-box','f-prob-otros','');
+    // 1. Mostrar UI INMEDIATAMENTE desde localStorage (instantáneo)
+    updateStats(); renderRecent(); renderAll();
+    // 2. Sincronizar Sheets EN SEGUNDO PLANO (no bloquea la UI)
+    if (sheetsSyncEnabled) {
+      setTimeout(() => {
+        loadFromSheets(true).then(loaded => {
+          if (loaded) toast('📊 Sincronizado con Google Sheets ✅');
+        });
+      }, 300); // pequeño delay para que la UI se pinte primero
+    }
+    startAutoRefresh();
+  } else {
+    document.getElementById('adminLayout').style.display = 'none';
+    document.getElementById('doctorLayout').style.display = 'block';
+    document.getElementById('headerNewBtn').style.display = 'none';
+    populateAreaSelects();
+    populateCatSelects();
+    renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros','');
+    renderMyTickets();
+  }
+}
+
+function doLogout() {
+  stopAutoRefresh();
+  currentUser = null;
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginDni').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('adminLayout').style.display = 'none';
+  document.getElementById('doctorLayout').style.display = 'none';
+}
+
+// Enter en login
+document.getElementById('loginDni').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('loginPass').focus(); });
+
+// ════════════════════════════════════════════════
+//  VISTAS ADMIN
+// ════════════════════════════════════════════════
+function showView(name, navEl) {
+  document.querySelectorAll('#adminLayout .view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (navEl) {
+    document.querySelectorAll('#adminLayout .nav-item').forEach(n => n.classList.remove('active'));
+    navEl.classList.add('active');
+  }
+  if (name==='tickets') { activeAreaFilter=null; document.getElementById('ticketsViewTitle').textContent='Todos los Tickets'; renderAll(); }
+  if (name==='dashboard') renderRecent();
+  if (name==='config') renderConfig();
+}
+
+function backToList() {
+  showView('tickets', null); currentDetailId = null;
+}
+
+function filterAndShow(estado, navEl) {
+  activeFilter = estado; activeAreaFilter = null;
+  document.querySelectorAll('#adminLayout .pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('ticketsViewTitle').textContent = 'Tickets: ' + estado;
+  showView('tickets', navEl); renderAll();
+}
+
+function filterArea(area, navEl) {
+  activeAreaFilter = area; activeFilter = 'todos';
+  document.querySelectorAll('#adminLayout .pill').forEach(p => { p.classList.remove('active'); if(p.textContent==='Todos') p.classList.add('active'); });
+  document.getElementById('ticketsViewTitle').textContent = '📍 ' + area;
+  showView('tickets', navEl); renderAll();
+}
+
+// ════════════════════════════════════════════════
+//  STATS
+// ════════════════════════════════════════════════
+function updateStats() {
+  const tot=tickets.length, op=tickets.filter(t=>t.estado==='Abierto').length,
+        pr=tickets.filter(t=>t.estado==='En Proceso').length, cl=tickets.filter(t=>t.estado==='Cerrado').length;
+  document.getElementById('st-total').textContent=tot;
+  document.getElementById('st-open').textContent=op;
+  document.getElementById('st-proc').textContent=pr;
+  document.getElementById('st-done').textContent=cl;
+  document.getElementById('ss-open').textContent=op;
+  document.getElementById('ss-proc').textContent=pr;
+  document.getElementById('ss-done').textContent=cl;
+}
+
+// ════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════
+function ticketHTML(t, clickFn='openDetail') {
+  const ec = t.estado==='Abierto'?'estado-abierto':t.estado==='En Proceso'?'estado-proceso':'estado-cerrado';
+  const pulseClass = t.estado==='Abierto' ? ' abierto-pulse' : '';
+  return `<div class="ticket-card${pulseClass}" onclick="${clickFn}('${t.id}')">
+    <div class="tc-priority ${t.prioridad}"></div>
+    <div class="tc-body">
+      <div class="tc-id">${t.id}</div>
+      <div class="tc-title">${t.categoria} — ${t.area}</div>
+      <div class="tc-meta">
+        <span class="chip ${ec}">${t.estado}</span>
+        <span class="chip cat">${t.categoria}</span>
+        <span class="chip area">${t.area}</span>
+      </div>
+    </div>
+    <div class="tc-right">
+      <div class="tc-date">${t.fecha}<br>${t.hora}</div>
+      <div class="tc-doctor">${t.doctor}</div>
+    </div>
+  </div>`;
+}
+
+function renderRecent() {
+  const el = document.getElementById('recentTickets');
+  const r = tickets.slice(0,6);
+  el.innerHTML = r.length ? r.map(t=>ticketHTML(t)).join('') : `<div class="empty"><div class="empty-icon">🎫</div>No hay tickets aún.</div>`;
+}
+
+function getFiltered() {
+  const s=(document.getElementById('searchBar')?.value||'').toLowerCase();
+  return tickets.filter(t => {
+    if(activeAreaFilter && t.area!==activeAreaFilter) return false;
+    if(activeFilter==='Abierto'&&t.estado!=='Abierto') return false;
+    if(activeFilter==='En Proceso'&&t.estado!=='En Proceso') return false;
+    if(activeFilter==='Cerrado'&&t.estado!=='Cerrado') return false;
+    if(activeFilter==='alta'&&t.prioridad!=='alta') return false;
+    if(activeFilter==='media'&&t.prioridad!=='media') return false;
+    if(activeFilter==='baja'&&t.prioridad!=='baja') return false;
+    if(s&&!(t.id+t.doctor+t.area+t.categoria+t.problema).toLowerCase().includes(s)) return false;
+    return true;
+  });
+}
+
+function renderAll() {
+  const el=document.getElementById('allTickets');
+  const list=getFiltered();
+  el.innerHTML=list.length?list.map(t=>ticketHTML(t)).join(''):
+    `<div class="empty"><div class="empty-icon">🔍</div>No se encontraron tickets con ese filtro.</div>`;
+}
+
+function setPill(f,el) {
+  activeFilter=f; activeAreaFilter=null;
+  document.querySelectorAll('#adminLayout .pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ticketsViewTitle').textContent=f==='todos'?'Todos los Tickets':'Tickets: '+f;
+  renderAll();
+}
+
+// ════════════════════════════════════════════════
+//  MIS TICKETS (DOCTOR)
+// ════════════════════════════════════════════════
+function renderMyTickets() {
+  const el = document.getElementById('myTicketsList');
+  const mine = tickets.filter(t => t.createdByDni === currentUser.dni);
+  if (!mine.length) {
+    el.innerHTML = `<div class="empty" style="padding:2rem"><div class="empty-icon" style="font-size:2rem">📬</div>No tienes tickets registrados aún.</div>`;
+    return;
+  }
+  el.innerHTML = mine.map(t => {
+    const ec = t.estado==='Abierto'?'estado-abierto':t.estado==='En Proceso'?'estado-proceso':'estado-cerrado';
+    const prioLabel = {alta:'🔴 Alta',media:'🟡 Media',baja:'🟢 Baja'}[t.prioridad];
+    return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:0.6rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:0.5rem">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--blue);font-weight:600">${t.id}</div>
+          <div style="font-weight:600;font-size:0.88rem;color:var(--navy);margin-top:2px">${t.categoria} — ${t.area}</div>
+        </div>
+        <span class="chip ${ec}">${t.estado}</span>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text2);margin-bottom:0.5rem">${t.problema.slice(0,90)}${t.problema.length>90?'...':''}</div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+        <span style="font-size:0.68rem;color:var(--text3);font-family:'JetBrains Mono',monospace">${t.fecha} ${t.hora}</span>
+        <span class="chip cat">${prioLabel}</span>
+        ${t.tecnico?`<span style="font-size:0.72rem;color:var(--teal);font-weight:600">🔧 ${t.tecnico}</span>`:''}
+      </div>
+      ${t.procedimiento?`<div style="margin-top:0.6rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:0.6rem 0.75rem;font-size:0.78rem;color:var(--green);font-weight:700;letter-spacing:0.5px;">✅ INCIDENCIA ATENDIDA</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+//  MODAL ADMIN
+// ════════════════════════════════════════════════
+function openNewTicket() {
+  editingId=null; pendingPhoto=null;
+  document.getElementById('modalTitleText').textContent='Registrar Incidencia';
+  clearModalForm();
+  populateAreaSelects('');
+  populateCatSelects('');
+  setTimeout(()=>renderProbChecklist('f-prob-list','f-prob-otros-box','f-prob-otros',''),50);
+  document.getElementById('ticketOverlay').classList.add('open');
+}
+
+function openEditModal(id) {
+  editingId=id; const t=tickets.find(x=>x.id===id); if(!t) return;
+  populateAreaSelects(t.area||'');
+  populateCatSelects(t.categoria||'');
+  document.getElementById('modalTitleText').textContent='Editar Ticket '+id;
+  document.getElementById('f-doc').value=t.doctor||'';
+  document.getElementById('f-prio').value=t.prioridad||'media';
+  document.getElementById('f-area').value=t.area||'';
+  document.getElementById('f-cat').value=t.categoria||'';
+  document.getElementById('f-prob').value=t.problema||'';
+  document.getElementById('f-proc').value=t.procedimiento||'';
+  document.getElementById('f-tec').value=t.tecnico||'';
+  document.getElementById('f-estado').value=t.estado||'Abierto';
+  pendingPhoto=t.foto||null;
+  // Render checklist con el valor real del ticket
+  renderProbChecklist('f-prob-list','f-prob-otros-box','f-prob-otros', t.problema||'');
+  // Asegurar que el hidden tenga el valor correcto
+  document.getElementById('f-prob').value=t.problema||'';
+  // Multi-tech sync
+  const tecnicosList = (t.tecnico||'').split(',').map(s=>s.trim()).filter(Boolean);
+  document.querySelectorAll('.tech-btn').forEach(b=>{
+    b.classList.toggle('selected', tecnicosList.includes(b.getAttribute('data-tech')));
+  });
+  ['Abierto','En Proceso','Cerrado'].forEach(e=>{
+    const map={'Abierto':'ebAbierto','En Proceso':'ebProceso','Cerrado':'ebCerrado'};
+    document.getElementById(map[e]).classList.toggle('selected',t.estado===e);
+  });
+  if(t.foto){
+    document.getElementById('filePreview').style.display='block';
+    document.getElementById('previewImg').src=t.foto;
+    document.getElementById('uploadArea').style.display='none';
+  } else {
+    document.getElementById('filePreview').style.display='none';
+    document.getElementById('uploadArea').style.display='block';
+  }
+  document.getElementById('ticketOverlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('ticketOverlay').classList.remove('open'); editingId=null; pendingPhoto=null; }
+
+function clearModalForm() {
+  ['f-doc','f-prob','f-proc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-prio').value='media'; document.getElementById('f-area').value='';
+  document.getElementById('f-cat').value=''; document.getElementById('f-tec').value='';
+  document.getElementById('f-estado').value='Abierto'; document.getElementById('f-foto').value='';
+  document.getElementById('filePreview').style.display='none';
+  document.getElementById('uploadArea').style.display='block';
+  document.querySelectorAll('.tech-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('ebAbierto').classList.add('selected');
+  document.getElementById('ebProceso').classList.remove('selected');
+  document.getElementById('ebCerrado').classList.remove('selected');
+}
+
+document.getElementById('ticketOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+function selectTech(btn, name) {
+  btn.classList.toggle('selected');
+  // Collect all selected technicians
+  const selected = [];
+  document.querySelectorAll('.tech-btn.selected').forEach(b => {
+    selected.push(b.getAttribute('data-tech'));
+  });
+  document.getElementById('f-tec').value = selected.join(', ');
+}
+function selectEstado(btn,estado){['ebAbierto','ebProceso','ebCerrado'].forEach(id=>document.getElementById(id).classList.remove('selected'));btn.classList.add('selected');document.getElementById('f-estado').value=estado;}
+function previewImage(input){
+  if(input.files&&input.files[0]){
+    if(input.files[0].size > 3*1024*1024){
+      toast('⚠️ La foto no debe superar 3MB','warn');
+      input.value='';
+      return;
+    }
+    const r=new FileReader();
+    r.onload=e=>{
+      pendingPhoto=e.target.result;
+      document.getElementById('previewImg').src=pendingPhoto;
+      document.getElementById('filePreview').style.display='block';
+      document.getElementById('uploadArea').style.display='none';
+      toast('📷 Foto cargada correctamente');
+    };
+    r.readAsDataURL(input.files[0]);
+  }
+}
+
+function removePhoto(){
+  pendingPhoto=null;
+  document.getElementById('previewImg').src='';
+  document.getElementById('filePreview').style.display='none';
+  document.getElementById('uploadArea').style.display='block';
+  document.getElementById('f-foto').value='';
+  // Si estamos editando, también quitar la foto del ticket
+  if(editingId){
+    const t=tickets.find(x=>x.id===editingId);
+    if(t) t.foto=null;
+  }
+}
+
+// ════════════════════════════════════════════════
+//  GUARDAR TICKET (ADMIN)
+// ════════════════════════════════════════════════
+function saveTicket() {
+  const doc=document.getElementById('f-doc').value.trim(),area=document.getElementById('f-area').value,cat=document.getElementById('f-cat').value,prob=document.getElementById('f-prob').value.trim();
+  if(!doc||!area||!cat||!prob){toast('⚠️ Complete los campos obligatorios (*)','warn');return;}
+  const now=new Date();
+  if(editingId){
+    const t=tickets.find(x=>x.id===editingId);
+    if(t){t.doctor=doc;t.prioridad=document.getElementById('f-prio').value;t.area=area;t.categoria=cat;t.problema=prob;t.procedimiento=document.getElementById('f-proc').value.trim();t.tecnico=document.getElementById('f-tec').value;t.estado=document.getElementById('f-estado').value;t.foto=pendingPhoto||t.foto||null;t.editado=now.toLocaleString('es-PE');}
+    toast(`✅ Ticket ${editingId} actualizado`);
+  } else {
+    counter++;
+    const newAdminTicket = {id:`TK-${String(counter).padStart(4,'0')}`,doctor:doc,prioridad:document.getElementById('f-prio').value,area,categoria:cat,problema:prob,procedimiento:document.getElementById('f-proc').value.trim(),tecnico:document.getElementById('f-tec').value,estado:document.getElementById('f-estado').value,foto:pendingPhoto||null,fecha:now.toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric'}),hora:now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}),ts:now.getTime(),createdByDni:'admin'};
+    tickets.unshift(newAdminTicket);
+    toast(`🎫 Ticket TK-${String(counter).padStart(4,'0')} creado`);
+  }
+  save(); updateStats(); renderRecent(); renderAll();
+  // Capturar ticket ANTES de closeModal (que limpia pendingPhoto)
+  const savedId = editingId || (tickets[0] ? tickets[0].id : null);
+  closeModal();
+  if(currentDetailId) openDetail(currentDetailId);
+  // Sync to Google Sheets con el objeto fresco de localStorage
+  if(savedId) {
+    const savedT = tickets.find(x=>x.id===savedId);
+    if(savedT) {
+      syncTicketToSheets(savedT);
+      syncAtencionToSheets(savedT);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════
+//  GUARDAR TICKET (DOCTOR)
+// ════════════════════════════════════════════════
+async function saveDoctorTicket() {
+  const doc=document.getElementById('d-doc').value.trim(),area=document.getElementById('d-area').value,cat=document.getElementById('d-cat').value;
+  // Sync prob hidden before reading
+  syncProbHidden('d-prob-list','d-prob-otros-box','d-prob-otros');
+  const prob=document.getElementById('d-prob').value.trim();
+  if(!doc||!area||!cat||!prob){toast('⚠️ Complete todos los campos requeridos','warn');return;}
+
+  // Deshabilitar botón para evitar doble envío
+  const btn = document.querySelector('#doctorLayout .btn-save');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Enviando...'; }
+
+  // Siempre consultar Sheets para obtener el contador REAL (ignora localStorage)
+  if(sheetsSyncEnabled){
+    try {
+      const r = await sheetsRead({ action: 'getAll' });
+      if(r && r.ok){
+        // SIEMPRE usar el contador de Sheets — así si se borró todo, empieza desde 0
+        counter = r.counter || 0;
+        localStorage.setItem('hd_counter_v2', String(counter));
+        // Sincronizar tickets locales con Sheets
+        tickets = r.tickets || [];
+        save();
+      }
+    } catch(e){ /* si falla, usar counter local */ }
+  }
+
+  const now=new Date();
+  counter++;
+  const id=`TK-${String(counter).padStart(4,'0')}`;
+  const newTicket = {id,doctor:doc,prioridad:document.getElementById('d-prio').value,area,categoria:cat,problema:prob,procedimiento:'',tecnico:'',estado:'Abierto',foto:null,fecha:now.toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric'}),hora:now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}),ts:now.getTime(),createdByDni:currentUser.dni};
+  tickets.unshift(newTicket);
+  save();
+  syncTicketToSheets(newTicket);
+  syncAtencionToSheets(newTicket);
+
+  // Limpiar form
+  document.getElementById('d-doc').value=''; document.getElementById('d-prob').value='';
+  document.getElementById('d-prio').value='media'; document.getElementById('d-area').value=''; document.getElementById('d-cat').value='';
+  renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros','');
+
+  // Restaurar botón
+  if(btn){ btn.disabled=false; btn.textContent='🎫 Enviar Ticket de Soporte'; }
+
+  // Mostrar success
+  document.getElementById('successId').textContent=id;
+  document.getElementById('successOverlay').classList.add('open');
+  renderMyTickets();
+}
+
+function closeSuccess(){document.getElementById('successOverlay').classList.remove('open');}
+
+// ════════════════════════════════════════════════
+//  DETALLE (ADMIN)
+// ════════════════════════════════════════════════
+function openDetail(id) {
+  currentDetailId=id; const t=tickets.find(x=>x.id===id); if(!t) return;
+  showView('detail',null);
+  document.getElementById('detailTicketId').textContent=t.id+' · '+t.fecha+' '+t.hora;
+  const prioLabel={alta:'🔴 Alta',media:'🟡 Media',baja:'🟢 Baja'}[t.prioridad];
+  const ec=t.estado==='Abierto'?'estado-abierto':t.estado==='En Proceso'?'estado-proceso':'estado-cerrado';
+  document.getElementById('detailContent').innerHTML=`
+    <div>
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-head">📋 Información de la Incidencia</div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-key">Doctor</span><span class="info-val">👨‍⚕️ ${t.doctor}</span></div>
+          <div class="info-row"><span class="info-key">Área</span><span class="info-val">🏥 ${t.area}</span></div>
+          <div class="info-row"><span class="info-key">Categoría</span><span class="info-val">💻 ${t.categoria}</span></div>
+          <div class="info-row"><span class="info-key">Prioridad</span><span class="info-val"><span class="prio-badge ${t.prioridad}">${prioLabel}</span></span></div>
+          <div class="info-row"><span class="info-key">Estado</span><span class="info-val"><span class="chip ${ec}">${t.estado}</span></span></div>
+          <div class="info-row"><span class="info-key">Fecha</span><span class="info-val">${t.fecha} — ${t.hora}</span></div>
+          ${t.editado?`<div class="info-row"><span class="info-key">Última edición</span><span class="info-val">${t.editado}</span></div>`:''}
+          <div style="margin-top:0.75rem"><div class="info-key">Descripción del problema</div><div class="info-desc">${t.problema}</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="card">
+        <div class="card-head">🔧 Solución Técnica</div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-key">Técnico</span><span class="info-val">${t.tecnico||'<em style="color:var(--text3)">Sin asignar</em>'}</span></div>
+          <div style="margin-top:0.75rem"><div class="info-key">Procedimiento ejecutado</div><div class="info-desc">${t.procedimiento||'<em style="color:var(--text3)">Pendiente de completar</em>'}</div></div>
+          <div style="margin-top:1rem"><div class="info-key">Evidencia fotográfica</div>
+            ${t.foto?`<img class="evidencia-img" src="${t.foto}" alt="Evidencia">`:`<div class="no-evidence">📷 Sin evidencia adjunta</div>`}
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">⚡ Acciones</div>
+        <div class="card-body">
+          <button class="btn-edit" onclick="openEditModal('${t.id}')">✏️ Editar / Completar Ticket</button>
+          <button class="btn-delete" onclick="deleteTicket('${t.id}')">🗑️ Eliminar Ticket</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function deleteTicket(id) {
+  if(!confirm(`¿Eliminar el ticket ${id}? Esta acción no se puede deshacer.`)) return;
+  tickets=tickets.filter(t=>t.id!==id); save();
+  deleteTicketFromSheets(id);
+  updateStats(); renderRecent(); renderAll(); backToList(); toast('🗑️ Ticket eliminado');
+}
+
+
+// ════════════════════════════════════════════════
+//  CONFIGURACIÓN — RENDER
+// ════════════════════════════════════════════════
+function renderConfig() {
+  const cfg = getThemeConfig();
+  const userList = Object.values(USERS);
+  const el = document.getElementById('configContent');
+
+  el.innerHTML = `
+  <div class="section-header">
+    <h2 class="section-title">⚙️ Configuración del Sistema</h2>
+  </div>
+
+  <div class="config-grid">
+
+    <!-- ─── APARIENCIA ─── -->
+    <div class="config-card">
+      <div class="config-head">🎨 Colores y Apariencia</div>
+      <div class="config-body">
+
+        <div>
+          <div class="form-label" style="margin-bottom:0.6rem">Temas prediseñados</div>
+          <div class="theme-presets">
+            <button class="theme-preset-btn" style="background:#0f2744;color:#7dd3fc;border-color:#1d6fa4" onclick="applyTheme('azul')">🔵 Azul Marino</button>
+            <button class="theme-preset-btn" style="background:#064e3b;color:#6ee7b7;border-color:#059669" onclick="applyTheme('verde')">🟢 Verde Hospital</button>
+            <button class="theme-preset-btn" style="background:#1e1b4b;color:#c4b5fd;border-color:#7c3aed" onclick="applyTheme('violeta')">🟣 Violeta</button>
+            <button class="theme-preset-btn" style="background:#7c2d12;color:#fdba74;border-color:#c2410c" onclick="applyTheme('naranja')">🟠 Naranja</button>
+            <button class="theme-preset-btn" style="background:#1f2937;color:#9ca3af;border-color:#4b5563" onclick="applyTheme('gris')">⚫ Gris Oscuro</button>
+            <button class="theme-preset-btn" style="background:#0c4a6e;color:#bae6fd;border-color:#0284c7" onclick="applyTheme('cielo')">🩵 Azul Cielo</button>
+            <button class="theme-preset-btn" style="background:#831843;color:#fbcfe8;border-color:#be185d" onclick="applyTheme('rosa')">🌸 Rosa Fucsia</button>
+            <button class="theme-preset-btn" style="background:#1a1a2e;color:#e94560;border-color:#e94560" onclick="applyTheme('noche')">🌙 Noche Roja</button>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <div><div class="color-label">Color principal (Header/Sidebar)</div><div class="color-sub">Barra superior y menú lateral</div></div>
+          <div class="color-picker-wrap">
+            <input type="color" value="${cfg.navy}" oninput="setCSSVar('--navy',this.value);this.nextElementSibling.textContent=this.value">
+            <span class="color-hex">${cfg.navy}</span>
+          </div>
+        </div>
+        <div class="color-row">
+          <div><div class="color-label">Color secundario (Sidebar)</div><div class="color-sub">Fondo del menú lateral</div></div>
+          <div class="color-picker-wrap">
+            <input type="color" value="${cfg.navy2}" oninput="setCSSVar('--navy2',this.value);this.nextElementSibling.textContent=this.value">
+            <span class="color-hex">${cfg.navy2}</span>
+          </div>
+        </div>
+        <div class="color-row">
+          <div><div class="color-label">Color acento (Botones/Links)</div><div class="color-sub">Botones principales y enlaces</div></div>
+          <div class="color-picker-wrap">
+            <input type="color" value="${cfg.blue}" oninput="setCSSVar('--blue',this.value);setCSSVar('--blue-light',hexToLight(this.value));this.nextElementSibling.textContent=this.value">
+            <span class="color-hex">${cfg.blue}</span>
+          </div>
+        </div>
+        <div class="color-row">
+          <div><div class="color-label">Color teal (Gradientes/Técnico)</div><div class="color-sub">Degradados y badges de técnico</div></div>
+          <div class="color-picker-wrap">
+            <input type="color" value="${cfg.teal}" oninput="setCSSVar('--teal',this.value);this.nextElementSibling.textContent=this.value">
+            <span class="color-hex">${cfg.teal}</span>
+          </div>
+        </div>
+        <div class="color-row">
+          <div><div class="color-label">Fondo de la página</div><div class="color-sub">Color de fondo general</div></div>
+          <div class="color-picker-wrap">
+            <input type="color" value="${cfg.bg}" oninput="setCSSVar('--bg',this.value);this.nextElementSibling.textContent=this.value">
+            <span class="color-hex">${cfg.bg}</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.75rem;margin-top:0.5rem;flex-wrap:wrap">
+          <button class="btn-add-user" onclick="saveTheme()">💾 Guardar Tema</button>
+          <button class="reset-btn" onclick="resetTheme()">↺ Restaurar por defecto</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── FUENTES ─── -->
+    <div class="config-card">
+      <div class="config-head">🖋️ Tipografía y Tamaño</div>
+      <div class="config-body">
+        <div class="form-group">
+          <label class="form-label">Familia de fuente</label>
+          <div class="font-select-group">
+            <button class="font-btn ${cfg.font==='DM Sans'?'selected':''}" style="font-family:'DM Sans',sans-serif" onclick="setFont('DM Sans',this)">DM Sans</button>
+            <button class="font-btn ${cfg.font==='Sora'?'selected':''}" style="font-family:'Sora',sans-serif" onclick="setFont('Sora',this)">Sora</button>
+            <button class="font-btn ${cfg.font==='Nunito'?'selected':''}" style="font-family:'Nunito',sans-serif" onclick="setFont('Nunito',this)">Nunito</button>
+            <button class="font-btn ${cfg.font==='Roboto'?'selected':''}" style="font-family:'Roboto',sans-serif" onclick="setFont('Roboto',this)">Roboto</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tamaño base de texto</label>
+          <select class="form-select" onchange="setFontSize(this.value)">
+            <option value="14" ${cfg.fontSize==='14'?'selected':''}>Pequeño (14px)</option>
+            <option value="16" ${cfg.fontSize==='16'||!cfg.fontSize?'selected':''}>Normal (16px)</option>
+            <option value="17" ${cfg.fontSize==='17'?'selected':''}>Grande (17px)</option>
+            <option value="18" ${cfg.fontSize==='18'?'selected':''}>Muy grande (18px)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Radio de bordes (tarjetas)</label>
+          <select class="form-select" onchange="setBorderRadius(this.value)">
+            <option value="4px" ${cfg.radius==='4px'?'selected':''}>Cuadrado (4px)</option>
+            <option value="8px" ${cfg.radius==='8px'?'selected':''}>Suave (8px)</option>
+            <option value="14px" ${!cfg.radius||cfg.radius==='14px'?'selected':''}>Redondeado (14px)</option>
+            <option value="20px" ${cfg.radius==='20px'?'selected':''}>Muy redondeado (20px)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre del sistema (Header)</label>
+          <input class="form-input" id="cfg-sysname" value="${cfg.sysname||'HelpDesk Hospitalario'}" placeholder="HelpDesk Hospitalario">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subtítulo del sistema (header)</label>
+          <input class="form-input" id="cfg-syssub" value="${cfg.syssub||'Soporte Técnico — Perú'}" placeholder="Soporte Técnico — Perú">
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:0.75rem 1rem;font-size:0.78rem;color:var(--text2);margin-top:0.25rem">
+          <strong>Pantalla de Login</strong>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Título en pantalla de login</label>
+          <input class="form-input" id="cfg-logintitle" value="${cfg.logintitle||'HelpDesk Hospitalario'}" placeholder="HelpDesk Hospitalario">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subtítulo en pantalla de login</label>
+          <input class="form-input" id="cfg-loginsub" value="${cfg.loginsub||'Soporte Técnico TI — Perú'}" placeholder="Soporte Técnico TI — Perú">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Texto inferior del login</label>
+          <input class="form-input" id="cfg-loginfoot" value="${cfg.loginfoot||'Sistema de Gestión de Incidencias TI · Perú 🇵🇪'}" placeholder="Sistema de Gestión de Incidencias TI · Perú 🇵🇪">
+        </div>
+        <button class="btn-add-user" onclick="saveSysName()" style="margin-top:0.25rem">💾 Guardar Títulos</button>
+      </div>
+    </div>
+
+    <!-- ─── USUARIOS ─── -->
+    <div class="config-card config-section-full">
+      <div class="config-head" style="display:flex;justify-content:space-between;align-items:center">
+        <span>👥 Gestión de Usuarios</span>
+        <button class="btn-add-user" onclick="openUserModal(null)">＋ Agregar Usuario</button>
+      </div>
+      <div class="config-body" style="padding:0">
+        <div style="overflow-x:auto;padding:1rem">
+        <table class="users-table">
+          <thead><tr><th>#</th><th>Nombre</th><th>DNI</th><th>Cargo</th><th>Rol</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${userList.map((u,i)=>`<tr>
+              <td style="color:var(--text3);font-size:0.72rem">${i+1}</td>
+              <td><strong>${u.nombre}</strong></td>
+              <td style="font-family:'JetBrains Mono',monospace;font-size:0.78rem">${u.dni}</td>
+              <td style="color:var(--text2);font-size:0.78rem">${u.cargo||'—'}</td>
+              <td><span class="role-badge ${u.rol}">${u.rol==='admin'?'🔧 Admin':'👨‍⚕️ Doctor'}</span></td>
+              <td style="display:flex;gap:0.4rem">
+                <button class="btn-icon edit" onclick="openUserModal('${u.dni}')" title="Editar">✏️</button>
+                <button class="btn-icon" onclick="deleteUser('${u.dni}')" title="Eliminar">🗑️</button>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── GOOGLE SHEETS ─── -->
+    <div class="config-card">
+      <div class="config-head">📊 Conexión con Google Sheets</div>
+      <div class="config-body">
+        <div style="background:var(--blue-light);border-radius:8px;padding:0.9rem 1rem;font-size:0.8rem;color:var(--blue);line-height:1.7;margin-bottom:0.25rem">
+          <strong>Para conectar:</strong><br>
+          1. Abre tu Google Sheet → <em>Extensiones → Apps Script</em><br>
+          2. Pega el código del archivo <code>.gs</code> descargado<br>
+          3. Haz clic en <strong>Implementar → Nueva implementación</strong><br>
+          4. Tipo: <strong>Aplicación web</strong> | Ejecutar como: <strong>Yo</strong> | Acceso: <strong>Cualquier persona</strong><br>
+          5. Copia la URL generada y pégala abajo
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL del Apps Script</label>
+          <input class="form-input" id="cfg-scripturl" value="${SCRIPT_URL}" placeholder="https://script.google.com/macros/s/...">
+        </div>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+          <button class="btn-add-user" onclick="saveScriptUrl()">💾 Guardar URL</button>
+          <button class="btn-add-user" style="background:linear-gradient(135deg,#059669,#0d9488)" onclick="testSheetConnection()">🔌 Probar conexión</button>
+          <button class="btn-add-user" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)" onclick="forceSyncAll()">⬆️ Subir todos los datos</button>
+        </div>
+        <div id="sheetsStatus" style="display:none;margin-top:0.5rem;padding:0.75rem;border-radius:8px;font-size:0.8rem"></div>
+      </div>
+    </div>
+
+    <!-- ─── ÁREAS / SERVICIOS ─── -->
+    <div class="config-card config-section-full">
+      <div class="config-head" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🏥 Gestión de Áreas / Servicios</span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="reset-btn" style="padding:7px 14px;font-size:0.75rem" onclick="resetAreas()">↺ Restaurar por defecto</button>
+          <button class="btn-add-user" onclick="focusNewArea()">＋ Agregar Área</button>
+        </div>
+      </div>
+      <div class="config-body" style="padding:0">
+        <div style="overflow-x:auto;padding:1rem">
+          <table class="users-table" id="areasListConfig">
+            <thead><tr><th>#</th><th>Nombre del Área / Servicio</th><th>Acciones</th></tr></thead>
+            <tbody id="areasTableBody"></tbody>
+          </table>
+        </div>
+        <div class="add-area-row">
+          <input type="text" id="newAreaInput" placeholder="✏️ Escriba el nombre de la nueva área y presione Enter o clic en Agregar..." onkeydown="if(event.key==='Enter')addArea()">
+          <button class="btn-add-user" onclick="addArea()">＋ Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PROBLEMAS ─── -->
+    <div class="config-card config-section-full">
+      <div class="config-head" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🔧 Gestión de Problemas / Incidencias</span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="reset-btn" style="padding:7px 14px;font-size:0.75rem" onclick="resetProblems()">↺ Restaurar por defecto</button>
+          <button class="btn-add-user" onclick="focusNewProblem()">＋ Agregar Problema</button>
+        </div>
+      </div>
+      <div class="config-body" style="padding:0">
+        <div style="overflow-x:auto;padding:1rem">
+          <table class="users-table">
+            <thead><tr><th>#</th><th>Nombre del Problema</th><th>Acciones</th></tr></thead>
+            <tbody id="problemsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="add-area-row">
+          <input type="text" id="newProblemInput" placeholder="✏️ Escriba el nombre del problema y presione Enter o clic en Agregar..."
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter')addProblem()">
+          <button class="btn-add-user" onclick="addProblem()">＋ Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CATEGORÍAS ─── -->
+    <div class="config-card config-section-full">
+      <div class="config-head" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🖥️ Gestión de Categorías de Equipo</span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="reset-btn" style="padding:7px 14px;font-size:0.75rem" onclick="resetCategories()">↺ Restaurar por defecto</button>
+          <button class="btn-add-user" onclick="focusNewCategory()">＋ Agregar Categoría</button>
+        </div>
+      </div>
+      <div class="config-body" style="padding:0">
+        <div style="overflow-x:auto;padding:1rem">
+          <table class="users-table">
+            <thead><tr><th>#</th><th>Nombre de la Categoría</th><th>Acciones</th></tr></thead>
+            <tbody id="categoriesTableBody"></tbody>
+          </table>
+        </div>
+        <div class="add-area-row">
+          <input type="text" id="newCategoryInput" placeholder="✏️ Escriba el nombre de la categoría y presione Enter o clic en Agregar..."
+            onkeydown="if(event.key==='Enter')addCategory()">
+          <button class="btn-add-user" onclick="addCategory()">＋ Agregar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── INFO DEL SISTEMA ─── -->
+    <div class="config-card">
+      <div class="config-head">ℹ️ Información del Sistema</div>
+      <div class="config-body">
+        <div class="system-info-row"><span class="system-info-key">Versión</span><span class="system-info-val">v2.0.0</span></div>
+        <div class="system-info-row"><span class="system-info-key">Total usuarios</span><span class="system-info-val">${userList.length}</span></div>
+        <div class="system-info-row"><span class="system-info-key">Total tickets</span><span class="system-info-val">${tickets.length}</span></div>
+        <div class="system-info-row"><span class="system-info-key">Tickets abiertos</span><span class="system-info-val">${tickets.filter(t=>t.estado==='Abierto').length}</span></div>
+        <div class="system-info-row"><span class="system-info-key">Almacenamiento</span><span class="system-info-val">${sheetsSyncEnabled?"Local + Google Sheets ✅":"Solo local"}</span></div>
+        <div style="margin-top:1rem">
+          <button class="reset-btn" onclick="if(confirm('¿Borrar TODOS los tickets y reiniciar el contador a TK-0001? Esta acción no se puede deshacer.'))clearAllTickets()">🗑️ Borrar todos los tickets y reiniciar contador</button>
+        </div>
+      </div>
+    </div>
+
+  </div>`;
+  renderAreasConfig();
+  renderProblemsConfig();
+  renderCategoriesConfig();
+}
+
+
+// ════════════════════════════════════════════════
+//  GESTIÓN DE CATEGORÍAS
+// ════════════════════════════════════════════════
+function renderCategoriesConfig() {
+  const tbody = document.getElementById('categoriesTableBody');
+  if (!tbody) return;
+  if (!categories.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:1.5rem">No hay categorías registradas.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = categories.map((c, i) => `
+    <tr>
+      <td style="color:var(--text3);font-size:0.72rem">${i+1}</td>
+      <td id="cat-cell-${i}"><strong>${c}</strong></td>
+      <td style="display:flex;gap:0.4rem">
+        <button class="btn-icon edit" onclick="startCatEdit(${i})" title="Editar">✏️</button>
+        <button class="btn-icon" onclick="deleteCat(${i})" title="Eliminar">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function focusNewCategory() {
+  const inp = document.getElementById('newCategoryInput');
+  if (inp) { inp.focus(); inp.scrollIntoView({behavior:'smooth',block:'center'}); }
+}
+
+function startCatEdit(i) {
+  const cell = document.getElementById('cat-cell-'+i);
+  if (!cell) return;
+  cell.innerHTML = `<div class="area-inline-edit">
+    <input type="text" id="cat-edit-input-${i}" value="${categories[i]}"
+      onkeydown="if(event.key==='Enter')saveCatEdit(${i});if(event.key==='Escape')renderCategoriesConfig()">
+    <button class="btn-icon edit" onclick="saveCatEdit(${i})" style="border-color:var(--green);color:var(--green)">✅</button>
+    <button class="btn-icon" onclick="renderCategoriesConfig()">✕</button>
+  </div>`;
+  document.getElementById('cat-edit-input-'+i).focus();
+}
+
+function saveCatEdit(i) {
+  const inp = document.getElementById('cat-edit-input-'+i);
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) { toast('⚠️ El nombre no puede estar vacío','warn'); return; }
+  categories[i] = val;
+  saveCategories();
+  populateCatSelects();
+  renderCategoriesConfig();
+  toast('✅ Categoría actualizada');
+}
+
+function addCategory() {
+  const inp = document.getElementById('newCategoryInput');
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) { toast('⚠️ Escribe el nombre de la categoría','warn'); return; }
+  if (categories.includes(val)) { toast('⚠️ Esa categoría ya existe','warn'); return; }
+  categories.push(val);
+  saveCategories();
+  populateCatSelects();
+  renderCategoriesConfig();
+  inp.value = '';
+  toast('✅ Categoría "'+val+'" agregada');
+}
+
+function deleteCat(i) {
+  const name = categories[i];
+  if (!confirm('¿Eliminar la categoría "'+name+'"?')) return;
+  categories.splice(i, 1);
+  saveCategories();
+  populateCatSelects();
+  renderCategoriesConfig();
+  toast('🗑️ Categoría eliminada');
+}
+
+function resetCategories() {
+  if (!confirm('¿Restaurar las categorías por defecto?')) return;
+  categories = [...DEFAULT_CATEGORIES];
+  saveCategories();
+  populateCatSelects();
+  renderCategoriesConfig();
+  toast('↺ Categorías restauradas');
+}
+
+// ════════════════════════════════════════════════
+//  GESTIÓN DE PROBLEMAS
+// ════════════════════════════════════════════════
+function renderProblemsConfig() {
+  const tbody = document.getElementById('problemsTableBody');
+  if (!tbody) return;
+  if (!problems.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:1.5rem">No hay problemas registrados.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = problems.map((p, i) => `
+    <tr id="prob-row-${i}">
+      <td style="color:var(--text3);font-size:0.72rem">${i+1}</td>
+      <td id="prob-cell-${i}"><strong>${p}</strong></td>
+      <td style="display:flex;gap:0.4rem">
+        <button class="btn-icon edit" onclick="startProbEdit(${i})" title="Editar">✏️</button>
+        <button class="btn-icon" onclick="deleteProb(${i})" title="Eliminar">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function focusNewProblem() {
+  const inp = document.getElementById('newProblemInput');
+  if (inp) { inp.focus(); inp.scrollIntoView({behavior:'smooth',block:'center'}); }
+}
+
+function startProbEdit(i) {
+  const cell = document.getElementById('prob-cell-'+i);
+  if (!cell) return;
+  cell.innerHTML = `<div class="area-inline-edit">
+    <input type="text" id="prob-edit-input-${i}" value="${problems[i]}"
+      style="text-transform:uppercase"
+      oninput="this.value=this.value.toUpperCase()"
+      onkeydown="if(event.key==='Enter')saveProbEdit(${i});if(event.key==='Escape')renderProblemsConfig()">
+    <button class="btn-icon edit" onclick="saveProbEdit(${i})" style="border-color:var(--green);color:var(--green)">✅</button>
+    <button class="btn-icon" onclick="renderProblemsConfig()">✕</button>
+  </div>`;
+  document.getElementById('prob-edit-input-'+i).focus();
+}
+
+function saveProbEdit(i) {
+  const inp = document.getElementById('prob-edit-input-'+i);
+  if (!inp) return;
+  const val = inp.value.trim().toUpperCase();
+  if (!val) { toast('⚠️ El nombre no puede estar vacío','warn'); return; }
+  problems[i] = val;
+  saveProblems();
+  refreshProbChecklists();
+  renderProblemsConfig();
+  toast('✅ Problema actualizado');
+}
+
+function addProblem() {
+  const inp = document.getElementById('newProblemInput');
+  if (!inp) return;
+  const val = inp.value.trim().toUpperCase();
+  if (!val) { toast('⚠️ Escribe el nombre del problema','warn'); return; }
+  if (problems.includes(val)) { toast('⚠️ Ese problema ya existe','warn'); return; }
+  // Insertar antes de OTROS si existe
+  const othersIdx = problems.indexOf('OTROS');
+  if (othersIdx >= 0) problems.splice(othersIdx, 0, val);
+  else problems.push(val);
+  saveProblems();
+  refreshProbChecklists();
+  renderProblemsConfig();
+  inp.value = '';
+  toast('✅ Problema "'+val+'" agregado');
+}
+
+function deleteProb(i) {
+  const name = problems[i];
+  if (!confirm('¿Eliminar "'+name+'"?')) return;
+  problems.splice(i, 1);
+  saveProblems();
+  refreshProbChecklists();
+  renderProblemsConfig();
+  toast('🗑️ Problema eliminado');
+}
+
+function resetProblems() {
+  if (!confirm('¿Restaurar la lista de problemas por defecto?')) return;
+  problems = [...DEFAULT_PROBLEMS];
+  saveProblems();
+  refreshProbChecklists();
+  renderProblemsConfig();
+  toast('↺ Problemas restaurados');
+}
+
+function refreshProbChecklists() {
+  // Re-render both checklists keeping current selection
+  const dHidden = document.getElementById('d-prob');
+  const fHidden = document.getElementById('f-prob');
+  renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros', dHidden ? dHidden.value : '');
+  renderProbChecklist('f-prob-list','f-prob-otros-box','f-prob-otros', fHidden ? fHidden.value : '');
+}
+
+// ════════════════════════════════════════════════
+//  GESTIÓN DE ÁREAS
+// ════════════════════════════════════════════════
+function renderAreasConfig() {
+  const tbody = document.getElementById('areasTableBody');
+  if (!tbody) return;
+  if (!areas.length) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:1.5rem">No hay áreas registradas.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = areas.map((a, i) => `
+    <tr id="area-row-${i}">
+      <td style="color:var(--text3);font-size:0.72rem">${i+1}</td>
+      <td id="area-cell-${i}"><strong>${a}</strong></td>
+      <td style="display:flex;gap:0.4rem">
+        <button class="btn-icon edit" onclick="startAreaEdit(${i})" title="Editar">✏️</button>
+        <button class="btn-icon" onclick="deleteArea(${i})" title="Eliminar">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function focusNewArea() {
+  const inp = document.getElementById('newAreaInput');
+  if (inp) { inp.focus(); inp.scrollIntoView({behavior:'smooth',block:'center'}); }
+}
+
+function startAreaEdit(i) {
+  const cell = document.getElementById('area-cell-'+i);
+  if (!cell) return;
+  cell.innerHTML = `<div class="area-inline-edit">
+    <input type="text" id="area-edit-input-${i}" value="${areas[i]}" onkeydown="if(event.key==='Enter')saveAreaEdit(${i});if(event.key==='Escape')renderAreasConfig()">
+    <button class="btn-icon edit" onclick="saveAreaEdit(${i})" title="Guardar" style="border-color:var(--green);color:var(--green)">✅</button>
+    <button class="btn-icon" onclick="renderAreasConfig()" title="Cancelar">✕</button>
+  </div>`;
+  document.getElementById('area-edit-input-'+i).focus();
+}
+
+function saveAreaEdit(i) {
+  const inp = document.getElementById('area-edit-input-'+i);
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) { toast('⚠️ El nombre no puede estar vacío','warn'); return; }
+  areas[i] = val;
+  saveAreas();
+  populateAreaSelects();
+  renderAreasConfig();
+  toast('✅ Área actualizada');
+}
+
+function addArea() {
+  const inp = document.getElementById('newAreaInput');
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) { toast('⚠️ Escribe el nombre del área','warn'); return; }
+  if (areas.includes(val)) { toast('⚠️ Esa área ya existe','warn'); return; }
+  areas.push(val);
+  saveAreas();
+  populateAreaSelects();
+  renderAreasConfig();
+  inp.value = '';
+  toast('✅ Área "'+val+'" agregada');
+}
+
+function deleteArea(i) {
+  const name = areas[i];
+  if (!confirm('¿Eliminar el área "'+name+'"?')) return;
+  areas.splice(i, 1);
+  saveAreas();
+  populateAreaSelects();
+  renderAreasConfig();
+  toast('🗑️ Área eliminada');
+}
+
+function resetAreas() {
+  if (!confirm('¿Restaurar las áreas por defecto? Se perderán las personalizadas.')) return;
+  areas = [...DEFAULT_AREAS];
+  saveAreas();
+  populateAreaSelects();
+  renderAreasConfig();
+  toast('↺ Áreas restauradas');
+}
+
+// ════════════════════════════════════════════════
+//  TEMA / COLORES
+// ════════════════════════════════════════════════
+function getThemeConfig() {
+  return JSON.parse(localStorage.getItem('hd_theme_v2') || 'null') || {
+    navy:'#0f2744', navy2:'#1e3a5f', blue:'#1d6fa4', teal:'#0d9488',
+    bg:'#f0f4f8', font:'DM Sans', fontSize:'16', radius:'14px',
+    sysname:'HelpDesk Hospitalario', syssub:'Soporte Técnico — Perú'
+  };
+}
+
+function setCSSVar(varName, value) {
+  document.documentElement.style.setProperty(varName, value);
+}
+
+function hexToLight(hex) {
+  // Create a light version of the color for backgrounds
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},0.1)`;
+}
+
+function applyTheme(name) {
+  const themes = {
+    azul:    { navy:'#0f2744', navy2:'#1e3a5f', blue:'#1d6fa4', teal:'#0d9488', bg:'#f0f4f8' },
+    verde:   { navy:'#064e3b', navy2:'#065f46', blue:'#059669', teal:'#0d9488', bg:'#f0fdf4' },
+    violeta: { navy:'#1e1b4b', navy2:'#312e81', blue:'#7c3aed', teal:'#8b5cf6', bg:'#f5f3ff' },
+    naranja: { navy:'#7c2d12', navy2:'#9a3412', blue:'#c2410c', teal:'#ea580c', bg:'#fff7ed' },
+    gris:    { navy:'#1f2937', navy2:'#374151', blue:'#4b5563', teal:'#6b7280', bg:'#f9fafb' },
+    cielo:   { navy:'#0c4a6e', navy2:'#075985', blue:'#0284c7', teal:'#0ea5e9', bg:'#f0f9ff' },
+    rosa:    { navy:'#831843', navy2:'#9d174d', blue:'#be185d', teal:'#db2777', bg:'#fdf2f8' },
+    noche:   { navy:'#1a1a2e', navy2:'#16213e', blue:'#e94560', teal:'#0f3460', bg:'#0d0d1a' },
+  };
+  const t = themes[name]; if(!t) return;
+  Object.entries(t).forEach(([k,v]) => setCSSVar('--'+k, v));
+  toast('🎨 Tema aplicado — guarda para mantenerlo');
+}
+
+function saveTheme() {
+  const style = document.documentElement.style;
+  const cfg = getThemeConfig();
+  const keys = ['navy','navy2','blue','teal','bg'];
+  keys.forEach(k => {
+    const v = style.getPropertyValue('--'+k).trim();
+    if(v) cfg[k] = v;
+  });
+  localStorage.setItem('hd_theme_v2', JSON.stringify(cfg));
+  toast('✅ Tema guardado correctamente');
+}
+
+function resetTheme() {
+  if(!confirm('¿Restaurar colores por defecto?')) return;
+  localStorage.removeItem('hd_theme_v2');
+  applyTheme('azul');
+  toast('↺ Tema restaurado');
+  renderConfig();
+}
+
+function setFont(family, btn) {
+  document.body.style.fontFamily = `'${family}', sans-serif`;
+  document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const cfg = getThemeConfig(); cfg.font = family;
+  localStorage.setItem('hd_theme_v2', JSON.stringify(cfg));
+  toast(`✅ Fuente cambiada a ${family}`);
+}
+
+function setFontSize(size) {
+  document.documentElement.style.fontSize = size + 'px';
+  const cfg = getThemeConfig(); cfg.fontSize = size;
+  localStorage.setItem('hd_theme_v2', JSON.stringify(cfg));
+}
+
+function setBorderRadius(r) {
+  document.querySelectorAll('.card,.stat-box,.ticket-card,.modal,.config-card').forEach(el=>el.style.borderRadius=r);
+  const cfg = getThemeConfig(); cfg.radius = r;
+  localStorage.setItem('hd_theme_v2', JSON.stringify(cfg));
+}
+
+function saveSysName() {
+  const name       = document.getElementById('cfg-sysname')?.value.trim();
+  const sub        = document.getElementById('cfg-syssub')?.value.trim();
+  const logintitle = document.getElementById('cfg-logintitle')?.value.trim();
+  const loginsub   = document.getElementById('cfg-loginsub')?.value.trim();
+  const loginfoot  = document.getElementById('cfg-loginfoot')?.value.trim();
+  // Update header
+  if(name) document.querySelector('.logo-name').textContent = name;
+  if(sub)  document.querySelector('.logo-sub').textContent = sub;
+  // Update login screen
+  if(logintitle) { const el=document.querySelector('.login-logo-name'); if(el) el.textContent=logintitle; }
+  if(loginsub)   { const el=document.querySelector('.login-logo-sub');  if(el) el.textContent=loginsub; }
+  if(loginfoot)  { const el=document.querySelector('#loginFootText');   if(el) el.textContent=loginfoot; }
+  // Save
+  const cfg = getThemeConfig();
+  cfg.sysname=name||cfg.sysname; cfg.syssub=sub||cfg.syssub;
+  cfg.logintitle=logintitle||cfg.logintitle;
+  cfg.loginsub=loginsub||cfg.loginsub;
+  cfg.loginfoot=loginfoot||cfg.loginfoot;
+  localStorage.setItem('hd_theme_v2', JSON.stringify(cfg));
+  toast('✅ Títulos actualizados correctamente');
+}
+
+function applyStoredTheme() {
+  const cfg = getThemeConfig();
+  setCSSVar('--navy',  cfg.navy);
+  setCSSVar('--navy2', cfg.navy2);
+  setCSSVar('--blue',  cfg.blue);
+  setCSSVar('--blue-light', hexToLight(cfg.blue));
+  setCSSVar('--teal',  cfg.teal);
+  setCSSVar('--bg',    cfg.bg);
+  if(cfg.font) document.body.style.fontFamily = `'${cfg.font}',sans-serif`;
+  if(cfg.fontSize) document.documentElement.style.fontSize = cfg.fontSize+'px';
+  if(cfg.sysname)    { const el=document.querySelector('.logo-name'); if(el) el.textContent=cfg.sysname; }
+  if(cfg.syssub)     { const el=document.querySelector('.logo-sub');  if(el) el.textContent=cfg.syssub; }
+  if(cfg.logintitle) { const el=document.querySelector('.login-logo-name'); if(el) el.textContent=cfg.logintitle; }
+  if(cfg.loginsub)   { const el=document.querySelector('.login-logo-sub');  if(el) el.textContent=cfg.loginsub; }
+  if(cfg.loginfoot)  { const el=document.querySelector('#loginFootText');   if(el) el.textContent=cfg.loginfoot; }
+}
+
+// ════════════════════════════════════════════════
+//  GESTIÓN DE USUARIOS
+// ════════════════════════════════════════════════
+function openUserModal(dni) {
+  editingUserDni = dni;
+  const u = dni ? USERS[dni] : null;
+  document.getElementById('userModalTitle').textContent = u ? 'Editar Usuario' : 'Nuevo Usuario';
+  document.getElementById('u-nombre').value = u?.nombre || '';
+  document.getElementById('u-dni').value    = u?.dni    || '';
+  document.getElementById('u-clave').value  = u?.clave  || '';
+  document.getElementById('u-cargo').value  = u?.cargo  || '';
+  document.getElementById('u-rol').value    = u?.rol    || 'doctor';
+  // DNI always editable
+  document.getElementById('u-dni').disabled = false;
+  document.getElementById('userOverlay').classList.add('open');
+}
+
+function closeUserModal() {
+  document.getElementById('userOverlay').classList.remove('open');
+  editingUserDni = null;
+}
+
+document.getElementById('userOverlay').addEventListener('click', function(e){ if(e.target===this) closeUserModal(); });
+
+function saveUser() {
+  const nombre = document.getElementById('u-nombre').value.trim();
+  const dni    = editingUserDni || document.getElementById('u-dni').value.trim();
+  const clave  = document.getElementById('u-clave').value.trim();
+  const cargo  = document.getElementById('u-cargo').value.trim();
+  const rol    = document.getElementById('u-rol').value;
+
+  if(!nombre || !dni || !clave) { toast('⚠️ Complete nombre, DNI y contraseña','warn'); return; }
+  if(dni.length < 4) { toast('⚠️ El usuario debe tener al menos 4 caracteres','warn'); return; }
+  if(!editingUserDni && USERS[dni]) { toast('⚠️ Ya existe un usuario con ese DNI','warn'); return; }
+
+  // If editing and DNI changed, remove old key
+  if(editingUserDni && editingUserDni !== dni) {
+    if(USERS[dni]) { toast('⚠️ Ya existe un usuario con ese DNI/usuario','warn'); return; }
+    delete USERS[editingUserDni];
+  }
+  USERS[dni] = { nombre, dni, clave, cargo, rol };
+  saveUsers();
+  syncUserToSheets(USERS[dni]);
+  closeUserModal();
+  renderConfig();
+  toast(`✅ Usuario ${nombre} ${editingUserDni?'actualizado':'registrado'}`);
+}
+
+function deleteUser(dni) {
+  const u = USERS[dni];
+  if(!u) return;
+  // Allow deleting any user except the currently logged-in one
+  if(currentUser && dni === currentUser.dni) { toast('⚠️ No puedes eliminar tu propia cuenta activa','warn'); return; }
+  if(!confirm(`¿Eliminar el usuario "${u.nombre}" (DNI: ${dni})?`)) return;
+  delete USERS[dni];
+  saveUsers();
+  deleteUserFromSheets(dni);
+  renderConfig();
+  toast(`🗑️ Usuario ${u.nombre} eliminado`);
+}
+
+async function clearAllTickets() {
+  tickets = [];
+  counter = 0;
+  localStorage.setItem('hd_counter_v2', '0');
+  save();
+  updateStats();
+  renderRecent();
+  renderAll();
+  renderConfig();
+  toast('🗑️ Tickets eliminados — contador reiniciado a 0');
+
+  // Borrar también en Google Sheets
+  if (sheetsSyncEnabled) {
+    toast('⏳ Borrando en Google Sheets...');
+    const r = await sheetsRead({ action: 'clearTickets' });
+    if (r && r.ok) toast('✅ Google Sheets limpio — próximo ticket será TK-0001');
+    else toast('⚠️ Borra manualmente las filas en Google Sheets', 'warn');
+  }
+}
+
+
+// ════════════════════════════════════════════════
+//  GOOGLE SHEETS — CONFIG UI
+// ════════════════════════════════════════════════
+function saveScriptUrl() {
+  const url = document.getElementById('cfg-scripturl')?.value.trim();
+  if (!url) { toast('⚠️ Pega la URL del Apps Script','warn'); return; }
+  if (!url.startsWith('https://script.google.com')) { toast('⚠️ URL inválida. Debe ser de script.google.com','warn'); return; }
+  SCRIPT_URL = url;
+  sheetsSyncEnabled = true;
+  localStorage.setItem('hd_script_url', url);
+  toast('✅ URL guardada correctamente');
+  initSheetsHeaders();
+}
+
+async function initSheetsHeaders() {
+  const r = await sheetsCall({ action: 'initSheets' });
+  if (r && r.ok) toast('📊 Hojas de cálculo inicializadas en Google Sheets');
+}
+
+async function testSheetConnection() {
+  const statusEl = document.getElementById('sheetsStatus');
+  if (!SCRIPT_URL) { 
+    statusEl.style.display='block'; statusEl.style.background='#fee2e2'; statusEl.style.color='#dc2626';
+    statusEl.textContent='❌ No hay URL configurada. Guarda la URL primero.';
+    return; 
+  }
+  statusEl.style.display='block'; statusEl.style.background='#eff6ff'; statusEl.style.color='#1d6fa4';
+  statusEl.textContent='⏳ Probando conexión...';
+  const r = await sheetsRead({ action: 'ping' });
+  if (r && r.ok) {
+    statusEl.style.background='#f0fdf4'; statusEl.style.color='#16a34a';
+    statusEl.textContent='✅ Conexión exitosa con Google Sheets: ' + r.msg;
+  } else {
+    statusEl.style.background='#fee2e2'; statusEl.style.color='#dc2626';
+    statusEl.textContent='❌ No se pudo conectar. Verifica que la URL sea correcta y que el script esté publicado correctamente.';
+  }
+}
+
+async function forceSyncAll() {
+  if (!SCRIPT_URL) { toast('⚠️ Configura la URL del Apps Script primero','warn'); return; }
+  const statusEl = document.getElementById('sheetsStatus');
+  statusEl.style.display='block'; statusEl.style.background='#eff6ff'; statusEl.style.color='#1d6fa4';
+  statusEl.textContent='⏳ Subiendo todos los datos...';
+
+  // Init sheets first
+  await sheetsRead({ action: 'initSheets' });
+
+  // Upload all tickets
+  let ticketOk = 0;
+  for (const t of tickets) {
+    const r = await sheetsCall({ action: 'saveTicket', ticket: t });
+    if (r && r.ok) ticketOk++;
+  }
+
+  // Upload all users
+  let userOk = 0;
+  for (const u of Object.values(USERS)) {
+    const r = await sheetsCall({ action: 'saveUser', user: u });
+    if (r && r.ok) userOk++;
+  }
+
+  statusEl.style.background='#f0fdf4'; statusEl.style.color='#16a34a';
+  statusEl.textContent=`✅ Sincronización completa: ${ticketOk} tickets y ${userOk} usuarios subidos a Google Sheets`;
+  toast('✅ Todos los datos subidos a Google Sheets');
+}
+
+// ════════════════════════════════════════════════
+//  SINCRONIZACIÓN ENTRE PESTAÑAS
+// ════════════════════════════════════════════════
+window.addEventListener('storage', function(e) {
+  if (e.key === 'hd_tickets_v2' || e.key === 'hd_counter_v2') {
+    // Recargar datos desde localStorage
+    tickets = JSON.parse(localStorage.getItem('hd_tickets_v2') || '[]');
+    counter = parseInt(localStorage.getItem('hd_counter_v2') || '0');
+
+    // Si hay sesión activa, actualizar la vista según el rol
+    if (!currentUser) return;
+
+    if (currentUser.rol === 'admin') {
+      updateStats();
+      renderRecent();
+      // Solo re-renderizar lista si está visible (no interrumpir vista detalle)
+      const ticketsView = document.getElementById('view-tickets');
+      if (ticketsView && ticketsView.classList.contains('active')) renderAll();
+      // Mostrar notificación discreta
+      if (e.key === 'hd_tickets_v2') {
+        const prev = e.oldValue ? JSON.parse(e.oldValue) : [];
+        const curr = JSON.parse(e.newValue || '[]');
+        if (curr.length > prev.length) {
+          const nuevo = curr[0];
+          toast(`🔔 Nuevo ticket recibido: ${nuevo.id} — ${nuevo.area}`, 'new');
+        }
+      }
+    } else if (currentUser.rol === 'doctor') {
+      renderMyTickets();
+    }
+  }
+});
+
+// ════════════════════════════════════════════════
+//  RESET DE EMERGENCIA
+// ════════════════════════════════════════════════
+function emergencyReset() {
+  if(!confirm('¿Restablecer sesión?\n\nEsto eliminará usuarios personalizados y los restaurará a los valores originales.\n\nLos TICKETS no se borrarán.')) return;
+  localStorage.removeItem('hd_users_v2');
+  USERS = loadUsers();
+  saveUsers();
+  document.getElementById('loginDni').value = '';
+  document.getElementById('loginPass').value = '';
+  alert('✅ Sesión restablecida.\n\nPuedes ingresar con:\n• Usuario: 46738419  |  Clave: 46738419\n• Usuario: admin  |  Clave: admin');
+}
+
+// ════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════
+let toastTimer;
+function toast(msg, type='ok'){
+  const old=document.querySelector('.toast'); if(old) old.remove(); clearTimeout(toastTimer);
+  const el=document.createElement('div'); el.className='toast';
+  if (type==='warn')  el.style.borderLeftColor='#f59e0b';
+  else if (type==='new') { el.style.borderLeftColor='#7c3aed'; el.style.background='#1e1b4b'; }
+  else el.style.borderLeftColor='#0d9488';
+  el.textContent=msg; document.body.appendChild(el);
+  toastTimer=setTimeout(()=>el.remove(), type==='new'?5000:3200);
+}
+
+// ─── INICIO ──────────────────────────────────────────────────────
+// Aplicar tema guardado (afecta pantalla de login también)
+applyStoredTheme();
+// Inicializar usuarios correctamente al cargar
+USERS = loadUsers();
+// Limpiar cualquier usuario base corrupto del localStorage
+saveUsers();
+</script>
+</body>
+</html>
