@@ -1066,21 +1066,30 @@ const DEFAULT_AREAS = [
   'Consultorios Externos','Administración','Estadística / HCIS','Otro'
 ];
 let areas = JSON.parse(localStorage.getItem('hd_areas_v2') || 'null') || [...DEFAULT_AREAS];
-function saveAreas() { localStorage.setItem('hd_areas_v2', JSON.stringify(areas)); }
+function saveAreas() {
+  localStorage.setItem('hd_areas_v2', JSON.stringify(areas));
+  if (sheetsSyncEnabled) sheetsCall({ action: 'saveConfig', key: 'areas', data: areas });
+}
 
 const DEFAULT_PROBLEMS = [
   'CAMBIO DE TONER','RECARGA DE TINTA','ATASCO DE PAPEL',
   'NUEVO PAPEL TERMICO','SIN INTERNET','NO ENCIENDE','NO FUNCIONA','OTROS'
 ];
 let problems = JSON.parse(localStorage.getItem('hd_problems_v2') || 'null') || [...DEFAULT_PROBLEMS];
-function saveProblems() { localStorage.setItem('hd_problems_v2', JSON.stringify(problems)); }
+function saveProblems() {
+  localStorage.setItem('hd_problems_v2', JSON.stringify(problems));
+  if (sheetsSyncEnabled) sheetsCall({ action: 'saveConfig', key: 'problems', data: problems });
+}
 
 const DEFAULT_CATEGORIES = [
   'Pakamuros','Impresora','Computadora','Laptop','Internet','Red',
   'Monitor','CPU','Teclado / Mouse','Escáner','UPS / Regulador','Proyector','Otros'
 ];
 let categories = JSON.parse(localStorage.getItem('hd_categories_v2') || 'null') || [...DEFAULT_CATEGORIES];
-function saveCategories() { localStorage.setItem('hd_categories_v2', JSON.stringify(categories)); }
+function saveCategories() {
+  localStorage.setItem('hd_categories_v2', JSON.stringify(categories));
+  if (sheetsSyncEnabled) sheetsCall({ action: 'saveConfig', key: 'categories', data: categories });
+}
 
 function populateCatSelects(currentVal) {
   ['d-cat','f-cat'].forEach(id => {
@@ -1391,6 +1400,23 @@ async function loadFromSheets(silent=false) {
     }
     USERS[SUPER_ADMIN.dni] = SUPER_ADMIN; // siempre mantener super admin
     saveUsers();
+  }
+
+  // Load config (áreas, categorías, problemas) — sincronizados entre dispositivos
+  if (r.config) {
+    if (r.config.areas && r.config.areas.length > 0) {
+      areas = r.config.areas;
+      localStorage.setItem('hd_areas_v2', JSON.stringify(areas));
+    }
+    if (r.config.categories && r.config.categories.length > 0) {
+      categories = r.config.categories;
+      localStorage.setItem('hd_categories_v2', JSON.stringify(categories));
+      populateCatSelects();
+    }
+    if (r.config.problems && r.config.problems.length > 0) {
+      problems = r.config.problems;
+      localStorage.setItem('hd_problems_v2', JSON.stringify(problems));
+    }
   }
 
   hideSyncBanner();
