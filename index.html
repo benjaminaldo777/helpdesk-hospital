@@ -1567,7 +1567,40 @@ function doLogin() {
   const dni  = document.getElementById('loginDni').value.trim().toUpperCase();
   const pass = document.getElementById('loginPass').value.toUpperCase();
   const err  = document.getElementById('loginError');
+  const btn  = document.querySelector('#loginScreen button[onclick="doLogin()"]') ||
+               document.querySelector('#loginScreen .login-btn');
 
+  // Sincronizar usuarios desde Sheets ANTES de validar
+  // Así cualquier cambio de clave hecho desde otro dispositivo se aplica de inmediato
+  if (sheetsSyncEnabled && SCRIPT_URL) {
+    if (btn) { btn.textContent = '⏳ Verificando...'; btn.disabled = true; }
+    sheetsRead({ action: 'getAll' }).then(r => {
+      if (r && r.ok) {
+        // Actualizar usuarios frescos
+        if (r.usuarios && Object.keys(r.usuarios).length > 0) {
+          USERS = { ...r.usuarios };
+          USERS[SUPER_ADMIN.dni] = SUPER_ADMIN;
+          saveUsers();
+        }
+        // Actualizar config
+        if (r.config) {
+          if (Array.isArray(r.config.categories)) { categories = r.config.categories; localStorage.setItem('hd_categories_v2', JSON.stringify(categories)); }
+          if (Array.isArray(r.config.areas))      { areas = r.config.areas;           localStorage.setItem('hd_areas_v2', JSON.stringify(areas)); }
+          if (Array.isArray(r.config.problems))   { problems = r.config.problems;     localStorage.setItem('hd_problems_v2', JSON.stringify(problems)); }
+        }
+      }
+      if (btn) { btn.textContent = '🔐 Ingresar al Sistema'; btn.disabled = false; }
+      _finalizarLogin(dni, pass, err);
+    }).catch(() => {
+      if (btn) { btn.textContent = '🔐 Ingresar al Sistema'; btn.disabled = false; }
+      _finalizarLogin(dni, pass, err);
+    });
+  } else {
+    _finalizarLogin(dni, pass, err);
+  }
+}
+
+function _finalizarLogin(dni, pass, err) {
   // Recargar usuarios frescos desde localStorage
   USERS = loadUsers();
 
@@ -1604,7 +1637,7 @@ function doLogin() {
         loadFromSheets(true).then(loaded => {
           if (loaded) toast('📊 Sincronizado con Google Sheets ✅');
         });
-      }, 300); // pequeño delay para que la UI se pinte primero
+      }, 300);
     }
     startAutoRefresh();
   } else {
