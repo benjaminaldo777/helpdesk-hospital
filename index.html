@@ -1246,23 +1246,32 @@ async function doctorRefresh(btn) {
   btn.innerHTML = '⏳ Actualizando...';
   btn.disabled = true;
   const r = await sheetsRead({ action: 'getAll' });
-  if (r && r.config) {
-    if (Array.isArray(r.config.categories)) {
-      categories = r.config.categories;
-      localStorage.setItem('hd_categories_v2', JSON.stringify(categories));
-      populateCatSelects();
+  if (r && r.ok) {
+    // Actualizar usuarios — así los cambios de clave se aplican de inmediato
+    if (r.usuarios && Object.keys(r.usuarios).length > 0) {
+      USERS = { ...r.usuarios };
+      USERS[SUPER_ADMIN.dni] = SUPER_ADMIN;
+      saveUsers();
     }
-    if (Array.isArray(r.config.areas)) {
-      areas = r.config.areas;
-      localStorage.setItem('hd_areas_v2', JSON.stringify(areas));
-      populateAreaSelects();
+    // Actualizar config (categorías, áreas, problemas)
+    if (r.config) {
+      if (Array.isArray(r.config.categories)) {
+        categories = r.config.categories;
+        localStorage.setItem('hd_categories_v2', JSON.stringify(categories));
+        populateCatSelects();
+      }
+      if (Array.isArray(r.config.areas)) {
+        areas = r.config.areas;
+        localStorage.setItem('hd_areas_v2', JSON.stringify(areas));
+        populateAreaSelects();
+      }
+      if (Array.isArray(r.config.problems)) {
+        problems = r.config.problems;
+        localStorage.setItem('hd_problems_v2', JSON.stringify(problems));
+        renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros','');
+      }
     }
-    if (Array.isArray(r.config.problems)) {
-      problems = r.config.problems;
-      localStorage.setItem('hd_problems_v2', JSON.stringify(problems));
-      renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros','');
-    }
-    toast('✅ Categorías y áreas actualizadas');
+    toast('✅ Usuarios, categorías y áreas actualizadas');
   } else {
     toast('⚠️ No se pudo conectar con Sheets','warn');
   }
