@@ -326,7 +326,7 @@ header {
 .doctor-card-head {
   background:linear-gradient(135deg,var(--navy),#1e3a5f);
   padding:1.75rem 2rem;
-  display:flex; align-items:center; gap:1rem;
+  display:flex; align-items:center; gap:1rem; justify-content:space-between;
 }
 .doctor-card-head-icon {
   width:52px; height:52px;
@@ -2908,7 +2908,7 @@ function emergencyReset() {
   saveUsers();
   document.getElementById('loginDni').value = '';
   document.getElementById('loginPass').value = '';
-  alert('✅ Sesión restablecida.\n\nPuedes ingresar con:\n• Usuario: 46738419  |  Clave: 46738419\n• Usuario: admin  |  Clave: admin');
+  alert('✅ Sesión restablecida.\n\nAhora puedes ingresar con tu usuario y contraseña.');
 }
 
 // ════════════════════════════════════════════════
