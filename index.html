@@ -1271,7 +1271,12 @@ async function doctorRefresh(btn) {
         renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros','');
       }
     }
-    toast('✅ Usuarios, categorías y áreas actualizadas');
+    // Cargar tema y títulos
+    if (r.config && r.config.theme && typeof r.config.theme === 'object') {
+      localStorage.setItem('hd_theme_v2', JSON.stringify(r.config.theme));
+      applyStoredTheme();
+    }
+    toast('✅ Datos actualizados correctamente');
   } else {
     toast('⚠️ No se pudo conectar con Sheets','warn');
   }
@@ -1490,6 +1495,11 @@ async function loadFromSheets(silent=false) {
       configChanged = true;
     }
     if (configChanged) renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros','');
+    // Cargar tema y títulos
+    if (r.config.theme && typeof r.config.theme === 'object') {
+      localStorage.setItem('hd_theme_v2', JSON.stringify(r.config.theme));
+      applyStoredTheme();
+    }
   }
 
   hideSyncBanner();
@@ -1587,6 +1597,10 @@ function doLogin() {
           if (Array.isArray(r.config.categories)) { categories = r.config.categories; localStorage.setItem('hd_categories_v2', JSON.stringify(categories)); }
           if (Array.isArray(r.config.areas))      { areas = r.config.areas;           localStorage.setItem('hd_areas_v2', JSON.stringify(areas)); }
           if (Array.isArray(r.config.problems))   { problems = r.config.problems;     localStorage.setItem('hd_problems_v2', JSON.stringify(problems)); }
+          if (r.config.theme && typeof r.config.theme === 'object') {
+            localStorage.setItem('hd_theme_v2', JSON.stringify(r.config.theme));
+            applyStoredTheme();
+          }
         }
       }
       if (btn) { btn.textContent = '🔐 Ingresar al Sistema'; btn.disabled = false; }
@@ -2686,14 +2700,16 @@ function saveTheme() {
     if(v) cfg[k] = v;
   });
   localStorage.setItem('hd_theme_v2', JSON.stringify(cfg));
-  toast('✅ Tema guardado correctamente');
+  if (sheetsSyncEnabled) sheetsCall({ action: 'saveConfig', key: 'theme', data: cfg });
+  toast('✅ Tema guardado y sincronizado con todos los dispositivos');
 }
 
 function resetTheme() {
   if(!confirm('¿Restaurar colores por defecto?')) return;
   localStorage.removeItem('hd_theme_v2');
   applyTheme('azul');
-  toast('↺ Tema restaurado');
+  if (sheetsSyncEnabled) sheetsCall({ action: 'saveConfig', key: 'theme', data: getThemeConfig() });
+  toast('↺ Tema restaurado y sincronizado');
   renderConfig();
 }
 
@@ -2738,7 +2754,8 @@ function saveSysName() {
   cfg.loginsub=loginsub||cfg.loginsub;
   cfg.loginfoot=loginfoot||cfg.loginfoot;
   localStorage.setItem('hd_theme_v2', JSON.stringify(cfg));
-  toast('✅ Títulos actualizados correctamente');
+  if (sheetsSyncEnabled) sheetsCall({ action: 'saveConfig', key: 'theme', data: cfg });
+  toast('✅ Títulos actualizados y sincronizados con todos los dispositivos');
 }
 
 function applyStoredTheme() {
