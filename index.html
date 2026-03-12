@@ -800,12 +800,17 @@ header {
     <div class="doctor-panel" style="padding:1.5rem 1rem">
       <div style="width:100%;max-width:680px">
         <div class="doctor-card" style="margin-bottom:1.5rem">
-          <div class="doctor-card-head">
-            <div class="doctor-card-head-icon">📋</div>
-            <div>
-              <div class="doctor-card-head-title">Registrar Incidencia Técnica</div>
-              <div class="doctor-card-head-sub">Complete el formulario para generar su ticket de soporte</div>
+          <div class="doctor-card-head" style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <div class="doctor-card-head-icon">📋</div>
+              <div>
+                <div class="doctor-card-head-title">Registrar Incidencia Técnica</div>
+                <div class="doctor-card-head-sub">Complete el formulario para generar su ticket de soporte</div>
+              </div>
             </div>
+            <button onclick="doctorRefresh(this)" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:0.4rem 0.9rem;border-radius:8px;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:0.4rem;white-space:nowrap">
+              🔄 Actualizar
+            </button>
           </div>
           <div class="doctor-card-body">
             <div style="display:flex;flex-direction:column;gap:1rem">
@@ -1236,6 +1241,35 @@ function sheetsCall(params) {
 }
 
 // Fuerza mayúsculas preservando posición del cursor (funciona en móvil y PC)
+async function doctorRefresh(btn) {
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳ Actualizando...';
+  btn.disabled = true;
+  const r = await sheetsRead({ action: 'getAll' });
+  if (r && r.config) {
+    if (Array.isArray(r.config.categories)) {
+      categories = r.config.categories;
+      localStorage.setItem('hd_categories_v2', JSON.stringify(categories));
+      populateCatSelects();
+    }
+    if (Array.isArray(r.config.areas)) {
+      areas = r.config.areas;
+      localStorage.setItem('hd_areas_v2', JSON.stringify(areas));
+      populateAreaSelects();
+    }
+    if (Array.isArray(r.config.problems)) {
+      problems = r.config.problems;
+      localStorage.setItem('hd_problems_v2', JSON.stringify(problems));
+      renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros','');
+    }
+    toast('✅ Categorías y áreas actualizadas');
+  } else {
+    toast('⚠️ No se pudo conectar con Sheets','warn');
+  }
+  btn.innerHTML = orig;
+  btn.disabled = false;
+}
+
 function soloMayus(el) {
   const start = el.selectionStart;
   const end   = el.selectionEnd;
@@ -1427,21 +1461,26 @@ async function loadFromSheets(silent=false) {
     saveUsers();
   }
 
-  // Load config (áreas, categorías, problemas) — sincronizados entre dispositivos
+  // Load config — Sheets SIEMPRE gana sobre localStorage
   if (r.config) {
-    if (r.config.areas && r.config.areas.length > 0) {
+    let configChanged = false;
+    if (Array.isArray(r.config.areas)) {
       areas = r.config.areas;
       localStorage.setItem('hd_areas_v2', JSON.stringify(areas));
+      configChanged = true;
     }
-    if (r.config.categories && r.config.categories.length > 0) {
+    if (Array.isArray(r.config.categories)) {
       categories = r.config.categories;
       localStorage.setItem('hd_categories_v2', JSON.stringify(categories));
       populateCatSelects();
+      configChanged = true;
     }
-    if (r.config.problems && r.config.problems.length > 0) {
+    if (Array.isArray(r.config.problems)) {
       problems = r.config.problems;
       localStorage.setItem('hd_problems_v2', JSON.stringify(problems));
+      configChanged = true;
     }
+    if (configChanged) renderProbChecklist('d-prob-list','d-prob-otros-box','d-prob-otros','');
   }
 
   hideSyncBanner();
