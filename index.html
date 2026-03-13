@@ -205,6 +205,15 @@ header {
   background:var(--navy2); padding:1.5rem 1rem;
   display:flex; flex-direction:column; gap:0.25rem;
 }
+.hamburger-btn {
+  display:none; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+  color:#94a3b8; padding:7px 11px; border-radius:8px; font-size:1.1rem;
+  cursor:pointer; line-height:1;
+}
+.sidebar-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99;
+}
+.sidebar-overlay.open { display:block; }
 .sidebar-section-title {
   font-size:0.6rem; letter-spacing:2.5px; text-transform:uppercase;
   color:#64748b; padding:0.75rem 0.75rem 0.4rem; font-weight:600;
@@ -515,7 +524,12 @@ header {
 
 @media (max-width:900px) {
   .page { grid-template-columns:1fr; }
-  .sidebar { display:none; }
+  .sidebar {
+    position:fixed; left:-260px; top:0; bottom:0; width:240px;
+    z-index:100; transition:left 0.25s ease; overflow-y:auto;
+  }
+  .sidebar.open { left:0; }
+  .hamburger-btn { display:block; }
   .stats-row { grid-template-columns:repeat(2,1fr); }
   .detail-grid { grid-template-columns:1fr; }
 }
@@ -717,10 +731,12 @@ header {
       <button id="headerRefreshBtn" onclick="manualRefresh()" style="display:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#94a3b8;padding:7px 13px;border-radius:8px;font-family:DM Sans,sans-serif;font-size:0.78rem;cursor:pointer;transition:all 0.2s" title="Actualizar datos desde Google Sheets">
         🔄 Actualizar
       </button>
+      <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" title="Menú">☰</button>
       <button class="btn-logout" onclick="doLogout()">↩ Salir</button>
     </div>
   </header>
 
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
   <!-- ── ADMIN LAYOUT ── -->
   <div id="adminLayout" style="display:none">
     <div class="page">
@@ -1284,6 +1300,20 @@ async function doctorRefresh(btn) {
   btn.disabled = false;
 }
 
+function toggleSidebar() {
+  const sidebar = document.querySelector('#adminLayout .sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (!sidebar) return;
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('open');
+}
+function closeSidebar() {
+  const sidebar = document.querySelector('#adminLayout .sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+}
+
 function soloMayus(el) {
   const start = el.selectionStart;
   const end   = el.selectionEnd;
@@ -1396,7 +1426,7 @@ async function syncAtencionToSheets(ticket) {
   // PASO 2: subir fotos nuevas (base64) a Drive
   for (let fIdx = 0; fIdx < fotos.length; fIdx++) {
     try {
-      const fotoComprimida = await comprimirFoto(fotos[fIdx], 200, 0.25);
+      const fotoComprimida = await comprimirFoto(fotos[fIdx], 1200, 0.75);
       await sheetsCall({
         action:   'subirFoto',
         ticketId: ticket.id,
