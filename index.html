@@ -1376,22 +1376,16 @@ function sheetsRead(params) {
 async function sheetsFetch(params) {
   if (!SCRIPT_URL) return null;
   try {
-    // URLSearchParams es lo que Apps Script lee como e.parameter en doPost
-    const body = new URLSearchParams();
-    Object.entries(params).forEach(([k, v]) => {
-      body.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
-    });
+    // Enviar como JSON en el body — sin límite de tamaño
     const resp = await fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
       redirect: 'follow'
     });
     const text = await resp.text();
-    try { return JSON.parse(text); } catch(e) {
-      console.warn('sheetsFetch parse error, response:', text.substring(0,200));
-      return null;
-    }
+    try { return JSON.parse(text); }
+    catch(e) { return null; }
   } catch(err) {
     console.warn('sheetsFetch error:', err);
     return null;
