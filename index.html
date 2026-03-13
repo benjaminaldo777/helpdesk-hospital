@@ -833,11 +833,11 @@ header {
 
               <div class="doctor-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem">
                 <div class="form-group">
-                  <label class="form-label">Doctor / Solicitante *</label>
+                  <label class="form-label" id="lbl-d-doc">Doctor / Solicitante <span style="color:#ef4444">*</span></label>
                   <input class="form-input" id="d-doc" placeholder="DR. JUAN PÉREZ" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="soloMayus(this)" onkeydown="forzarMayusKey(event)" style="text-transform:uppercase">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Prioridad *</label>
+                  <label class="form-label" id="lbl-d-prio">Prioridad <span style="color:#ef4444">*</span></label>
                   <select class="form-select" id="d-prio">
                     <option value="media">🟡 Media</option>
                     <option value="alta">🔴 Alta — Urgente</option>
@@ -848,13 +848,13 @@ header {
 
               <div class="doctor-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem">
                 <div class="form-group">
-                  <label class="form-label">Área / Servicio *</label>
+                  <label class="form-label" id="lbl-d-area">Área / Servicio <span style="color:#ef4444">*</span></label>
                   <select class="form-select" id="d-area">
                     <option value="">Seleccionar área...</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Categoría *</label>
+                  <label class="form-label" id="lbl-d-cat">Categoría <span style="color:#ef4444">*</span></label>
                   <select class="form-select" id="d-cat">
                     <option value="">Seleccionar categoría...</option>
                   </select>
@@ -862,7 +862,7 @@ header {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Descripción del Problema *</label>
+                <label class="form-label" id="lbl-d-prob">Descripción del Problema <span style="color:#ef4444">*</span></label>
                 <div class="prob-checklist" id="d-prob-list"></div>
                 <div class="prob-otros-box" id="d-prob-otros-box">
                   <textarea id="d-prob-otros" placeholder="DESCRIBA EL PROBLEMA..." autocapitalize="characters" autocorrect="off" oninput="soloMayus(this);syncProbHidden('d-prob-list','d-prob-otros-box','d-prob-otros')" onkeypress="return /[A-Z0-9 ÁÉÍÓÚÑÜ.,\/\-\n]/i.test(String.fromCharCode(event.charCode||event.keyCode))||event.key==='Enter'||event.keyCode===13" style="text-transform:uppercase"></textarea>
@@ -900,11 +900,11 @@ header {
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Doctor / Solicitante *</label>
+          <label class="form-label" id="lbl-f-doc">Doctor / Solicitante <span style="color:#ef4444">*</span></label>
           <input class="form-input" id="f-doc" placeholder="DR. JUAN PÉREZ" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="soloMayus(this)" onkeydown="forzarMayusKey(event)" style="text-transform:uppercase">
         </div>
         <div class="form-group">
-          <label class="form-label">Prioridad *</label>
+          <label class="form-label" id="lbl-f-prio">Prioridad <span style="color:#ef4444">*</span></label>
           <select class="form-select" id="f-prio">
             <option value="media">🟡 Media</option>
             <option value="alta">🔴 Alta — Urgente</option>
@@ -914,13 +914,13 @@ header {
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Área / Servicio *</label>
+          <label class="form-label" id="lbl-f-area">Área / Servicio <span style="color:#ef4444">*</span></label>
           <select class="form-select" id="f-area">
             <option value="">Seleccionar área...</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Categoría *</label>
+          <label class="form-label" id="lbl-f-cat">Categoría <span style="color:#ef4444">*</span></label>
           <select class="form-select" id="f-cat">
             <option value="">Seleccionar categoría...</option>
           </select>
@@ -1114,6 +1114,29 @@ function saveCategories() {
   if (sheetsSyncEnabled) sheetsCall({ action: 'saveConfig', key: 'categories', data: categories });
 }
 
+const DEFAULT_LABELS = { doctor:'Doctor / Solicitante', prioridad:'Prioridad', area:'Área / Servicio', categoria:'Categoría', problema:'Descripción del Problema' };
+let formLabels = JSON.parse(localStorage.getItem('hd_labels_v2') || 'null') || {...DEFAULT_LABELS};
+function saveLabels() {
+  localStorage.setItem('hd_labels_v2', JSON.stringify(formLabels));
+  if (sheetsSyncEnabled) sheetsCall({ action: 'saveConfig', key: 'labels', data: formLabels });
+  applyLabels();
+}
+function applyLabels() {
+  // Aplicar en formulario doctor
+  const map = {
+    'lbl-d-doc': formLabels.doctor, 'lbl-d-prio': formLabels.prioridad,
+    'lbl-d-area': formLabels.area,  'lbl-d-cat': formLabels.categoria,
+    'lbl-d-prob': formLabels.problema,
+    'lbl-f-doc': formLabels.doctor, 'lbl-f-prio': formLabels.prioridad,
+    'lbl-f-area': formLabels.area,  'lbl-f-cat': formLabels.categoria,
+    'lbl-f-prob': formLabels.problema
+  };
+  Object.entries(map).forEach(([id, txt]) => {
+    const el = document.getElementById(id);
+    if (el) el.childNodes[0].textContent = txt + ' ';
+  });
+}
+
 function populateCatSelects(currentVal) {
   ['d-cat','f-cat'].forEach(id => {
     const sel = document.getElementById(id);
@@ -1291,6 +1314,12 @@ async function doctorRefresh(btn) {
     if (r.config && r.config.theme && typeof r.config.theme === 'object') {
       localStorage.setItem('hd_theme_v2', JSON.stringify(r.config.theme));
       applyStoredTheme();
+    }
+    // Cargar etiquetas
+    if (r.config && r.config.labels && typeof r.config.labels === 'object') {
+      formLabels = {...DEFAULT_LABELS, ...r.config.labels};
+      localStorage.setItem('hd_labels_v2', JSON.stringify(formLabels));
+      applyLabels();
     }
     toast('✅ Datos actualizados correctamente');
   } else {
@@ -1552,6 +1581,12 @@ async function loadFromSheets(silent=false) {
       localStorage.setItem('hd_theme_v2', JSON.stringify(r.config.theme));
       applyStoredTheme();
     }
+    // Cargar etiquetas
+    if (r.config.labels && typeof r.config.labels === 'object') {
+      formLabels = {...DEFAULT_LABELS, ...r.config.labels};
+      localStorage.setItem('hd_labels_v2', JSON.stringify(formLabels));
+      applyLabels();
+    }
   }
 
   hideSyncBanner();
@@ -1652,6 +1687,11 @@ function doLogin() {
           if (r.config.theme && typeof r.config.theme === 'object') {
             localStorage.setItem('hd_theme_v2', JSON.stringify(r.config.theme));
             applyStoredTheme();
+          }
+          if (r.config.labels && typeof r.config.labels === 'object') {
+            formLabels = {...DEFAULT_LABELS, ...r.config.labels};
+            localStorage.setItem('hd_labels_v2', JSON.stringify(formLabels));
+            applyLabels();
           }
         }
       }
@@ -2298,6 +2338,40 @@ function renderConfig() {
       </div>
     </div>
 
+    <!-- ─── ETIQUETAS FORMULARIO ─── -->
+    <div class="config-card">
+      <div class="config-head">🏷️ Etiquetas del Formulario de Incidencia</div>
+      <div class="config-body">
+        <p style="font-size:0.8rem;color:var(--text3);margin-bottom:1rem">Personaliza los nombres de los campos del formulario. Se aplican en todos los dispositivos.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+          <div class="form-group">
+            <label class="form-label">Campo "Doctor / Solicitante"</label>
+            <input class="form-input" id="cfg-lbl-doctor" value="${formLabels.doctor}" placeholder="Doctor / Solicitante">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Campo "Prioridad"</label>
+            <input class="form-input" id="cfg-lbl-prioridad" value="${formLabels.prioridad}" placeholder="Prioridad">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Campo "Área / Servicio"</label>
+            <input class="form-input" id="cfg-lbl-area" value="${formLabels.area}" placeholder="Área / Servicio">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Campo "Categoría"</label>
+            <input class="form-input" id="cfg-lbl-categoria" value="${formLabels.categoria}" placeholder="Categoría">
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="form-label">Campo "Descripción del Problema"</label>
+            <input class="form-input" id="cfg-lbl-problema" value="${formLabels.problema}" placeholder="Descripción del Problema">
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-top:1rem">
+          <button class="btn-add-user" onclick="guardarEtiquetas()">💾 Guardar Etiquetas</button>
+          <button class="btn-add-user" onclick="resetEtiquetas()" style="background:transparent;border:1px solid var(--text3);color:var(--text3)">↺ Restaurar por defecto</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── USUARIOS ─── -->
     <div class="config-card config-section-full">
       <div class="config-head" style="display:flex;justify-content:space-between;align-items:center">
@@ -2786,6 +2860,24 @@ function setBorderRadius(r) {
   localStorage.setItem('hd_theme_v2', JSON.stringify(cfg));
 }
 
+function guardarEtiquetas() {
+  formLabels.doctor    = document.getElementById('cfg-lbl-doctor')?.value.trim()    || DEFAULT_LABELS.doctor;
+  formLabels.prioridad = document.getElementById('cfg-lbl-prioridad')?.value.trim() || DEFAULT_LABELS.prioridad;
+  formLabels.area      = document.getElementById('cfg-lbl-area')?.value.trim()      || DEFAULT_LABELS.area;
+  formLabels.categoria = document.getElementById('cfg-lbl-categoria')?.value.trim() || DEFAULT_LABELS.categoria;
+  formLabels.problema  = document.getElementById('cfg-lbl-problema')?.value.trim()  || DEFAULT_LABELS.problema;
+  saveLabels();
+  toast('✅ Etiquetas guardadas y sincronizadas');
+}
+function resetEtiquetas() {
+  if (!confirm('¿Restaurar etiquetas por defecto?')) return;
+  formLabels = {...DEFAULT_LABELS};
+  saveLabels();
+  localStorage.setItem('hd_labels_v2', JSON.stringify(formLabels));
+  renderConfig();
+  toast('↺ Etiquetas restauradas');
+}
+
 function saveSysName() {
   const name       = document.getElementById('cfg-sysname')?.value.trim();
   const sub        = document.getElementById('cfg-syssub')?.value.trim();
@@ -3039,6 +3131,7 @@ function toast(msg, type='ok'){
 // ─── INICIO ──────────────────────────────────────────────────────
 // Aplicar tema guardado (afecta pantalla de login también)
 applyStoredTheme();
+applyLabels();
 // Inicializar usuarios correctamente al cargar
 USERS = loadUsers();
 // Limpiar cualquier usuario base corrupto del localStorage
