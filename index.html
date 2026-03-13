@@ -1345,7 +1345,7 @@ function sheetsRead(params) {
         .map(([k,v]) => encodeURIComponent(k) + '=' + encodeURIComponent(typeof v==='object' ? JSON.stringify(v) : String(v)))
         .join('&') +
       '&callback=' + cbName +
-      '&_t=' + Date.now(); // cache-buster
+      '&_t=' + Date.now();
 
     window[cbName] = function(data) {
       delete window[cbName];
@@ -1362,7 +1362,6 @@ function sheetsRead(params) {
     };
     document.head.appendChild(script);
 
-    // Timeout 15s
     setTimeout(function() {
       if (window[cbName]) {
         delete window[cbName];
@@ -1371,6 +1370,32 @@ function sheetsRead(params) {
       }
     }, 15000);
   });
+}
+
+// POST para datos grandes (fotos) — evita límite de URL de JSONP GET
+async function sheetsFetch(params) {
+  if (!SCRIPT_URL) return null;
+  try {
+    // URLSearchParams es lo que Apps Script lee como e.parameter en doPost
+    const body = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      body.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    });
+    const resp = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+      redirect: 'follow'
+    });
+    const text = await resp.text();
+    try { return JSON.parse(text); } catch(e) {
+      console.warn('sheetsFetch parse error, response:', text.substring(0,200));
+      return null;
+    }
+  } catch(err) {
+    console.warn('sheetsFetch error:', err);
+    return null;
+  }
 }
 
 
@@ -1423,16 +1448,19 @@ async function syncAtencionToSheets(ticket) {
   };
   sheetsCall({ action: 'saveAtencion', data: atencion });
 
-  // PASO 2: subir fotos nuevas (base64) a Drive
+  // PASO 2: subir fotos usando POST (soporta imágenes grandes)
   for (let fIdx = 0; fIdx < fotos.length; fIdx++) {
     try {
+      toast('⏳ Subiendo foto ' + (fIdx+1) + ' de ' + fotos.length + '...');
       const fotoComprimida = await comprimirFoto(fotos[fIdx], 1200, 0.75);
-      await sheetsCall({
+      const r = await sheetsFetch({
         action:   'subirFoto',
         ticketId: ticket.id,
         fIdx:     fIdx,
         foto:     fotoComprimida
       });
+      if (r && r.ok) toast('✅ Foto ' + (fIdx+1) + ' guardada en Drive');
+      else toast('⚠️ Error guardando foto ' + (fIdx+1), 'warn');
     } catch(e) { console.warn('Error subiendo foto ' + fIdx + ':', e); }
   }
 }
