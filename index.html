@@ -1471,21 +1471,43 @@ async function syncAtencionToSheets(ticket) {
   };
   sheetsCall({ action: 'saveAtencion', data: atencion });
 
-  // PASO 2: subir fotos usando POST (soporta imágenes grandes)
+  // PASO 2: subir fotos en chunks via JSONP (único método confiable desde GitHub Pages)
   for (let fIdx = 0; fIdx < fotos.length; fIdx++) {
     try {
       toast('⏳ Subiendo foto ' + (fIdx+1) + ' de ' + fotos.length + '...');
-      const fotoComprimida = await comprimirFoto(fotos[fIdx], 1200, 0.75);
-      const r = await sheetsFetch({
-        action:   'subirFoto',
-        ticketId: ticket.id,
-        fIdx:     fIdx,
-        foto:     fotoComprimida
-      });
-      if (r && r.ok) toast('✅ Foto ' + (fIdx+1) + ' guardada en Drive');
-      else toast('⚠️ Error guardando foto ' + (fIdx+1), 'warn');
+      // Comprimir: 800px / 60% — buen balance calidad/tamaño (~80-150KB base64)
+      const fotoComprimida = await comprimirFoto(fotos[fIdx], 800, 0.60);
+      const ok = await subirFotoEnChunks(ticket.id, fIdx, fotoComprimida);
+      if (ok) toast('✅ Foto ' + (fIdx+1) + ' guardada en Drive');
+      else    toast('⚠️ Error guardando foto ' + (fIdx+1) + ' — reintenta', 'warn');
     } catch(e) { console.warn('Error subiendo foto ' + fIdx + ':', e); }
   }
+}
+
+// Enviar foto en trozos de 40KB via JSONP (evita límite de URL)
+async function subirFotoEnChunks(ticketId, fIdx, base64) {
+  const CHUNK_SIZE = 40000; // 40KB por chunk — seguro para URL GET
+  const chunks = [];
+  for (let i = 0; i < base64.length; i += CHUNK_SIZE) {
+    chunks.push(base64.substring(i, i + CHUNK_SIZE));
+  }
+  const cacheKey = ticketId + '_f' + fIdx;
+  for (let i = 0; i < chunks.length; i++) {
+    const r = await sheetsRead({
+      action:       'uploadFotoChunk',
+      id:           cacheKey,
+      chunk:        chunks[i],
+      idx:          i,
+      total:        chunks.length,
+      ticketId:     ticketId,
+      fIdx:         fIdx
+    });
+    if (!r || !r.ok) {
+      console.warn('Chunk ' + i + ' falló:', r);
+      return false;
+    }
+  }
+  return true;
 }
 
 // Comprime imagen a canvas y devuelve base64 pequeño
