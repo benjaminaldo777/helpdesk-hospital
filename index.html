@@ -1477,10 +1477,10 @@ async function syncAtencionToSheets(ticket) {
     try {
       toast('⏳ Subiendo foto ' + (fIdx+1) + ' de ' + fotos.length + '...');
       // Comprimir: 800px / 60% — buen balance calidad/tamaño (~80-150KB base64)
-      const fotoComprimida = await comprimirFoto(fotos[fIdx], 400, 0.40);
+      const fotoComprimida = await comprimirFoto(fotos[fIdx], 800, 0.70);
       const ok = await subirFotoEnChunks(ticket.id, fIdx, fotoComprimida);
       if (ok) toast('✅ Foto ' + (fIdx+1) + ' guardada en Drive');
-      // El error detallado ya se mostró dentro de subirFotoEnChunks
+      else    toast('⚠️ Error guardando foto ' + (fIdx+1) + ' — reintenta', 'warn');
     } catch(e) { console.warn('Error subiendo foto ' + fIdx + ':', e); }
   }
 }
@@ -1494,7 +1494,6 @@ async function subirFotoEnChunks(ticketId, fIdx, base64) {
     chunks.push(base64.substring(i, i + CHUNK_SIZE));
   }
   const cacheKey = ticketId + '_f' + fIdx;
-  alert('Foto '+(fIdx+1)+': '+base64.length+' chars → '+chunks.length+' chunks a enviar');
   console.log('📸 Foto ' + (fIdx+1) + ': ' + base64.length + ' chars → ' + chunks.length + ' chunks');
   for (let i = 0; i < chunks.length; i++) {
     const esUltimo = (i === chunks.length - 1);
@@ -1512,7 +1511,6 @@ async function subirFotoEnChunks(ticketId, fIdx, base64) {
     if (!r || !r.ok) {
       const errMsg = r ? r.msg : 'Sin respuesta (timeout) en chunk '+i+'/'+chunks.length;
       console.warn('❌ Chunk ' + i + '/' + chunks.length + ' falló:', errMsg, r);
-      alert('DEBUG Error foto ' + (fIdx+1) + ' chunk ' + i + '/' + chunks.length + ':\n' + errMsg);
       return false;
     }
     if (!esUltimo) await new Promise(res => setTimeout(res, 100));
