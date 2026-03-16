@@ -2097,9 +2097,23 @@ function removePhoto() {
 // ════════════════════════════════════════════════
 //  GUARDAR TICKET (ADMIN)
 // ════════════════════════════════════════════════
-function saveTicket() {
+async function saveTicket() {
   const doc=document.getElementById('f-doc').value.trim(),area=document.getElementById('f-area').value,cat=document.getElementById('f-cat').value,prob=document.getElementById('f-prob').value.trim();
   if(!doc||!area||!cat||!prob){toast('⚠️ Complete los campos obligatorios (*)','warn');return;}
+
+  // Bloquear botón y modal mientras se procesa
+  const saveBtn = document.querySelector('#ticketOverlay .btn-save');
+  const cancelBtn = document.querySelector('#ticketOverlay .btn-cancel');
+  const closeBtn = document.querySelector('#ticketOverlay .btn-close');
+  const tieneNuevasFotos = pendingPhotos.length > 0;
+
+  function bloquearModal(bloqueado, texto) {
+    if (saveBtn)   { saveBtn.disabled = bloqueado; saveBtn.textContent = bloqueado ? texto : '💾 Guardar Ticket'; }
+    if (cancelBtn) cancelBtn.disabled = bloqueado;
+    if (closeBtn)  closeBtn.style.pointerEvents = bloqueado ? 'none' : '';
+    if (closeBtn)  closeBtn.style.opacity = bloqueado ? '0.3' : '';
+  }
+
   const now=new Date();
   if(editingId){
     const t=tickets.find(x=>x.id===editingId);
@@ -2112,18 +2126,28 @@ function saveTicket() {
     toast(`🎫 Ticket TK-${String(counter).padStart(4,'0')} creado`);
   }
   save(); updateStats(); renderRecent(); renderAll();
-  // Capturar ticket ANTES de closeModal (que limpia pendingPhoto)
+
   const savedId = editingId || (tickets[0] ? tickets[0].id : null);
-  closeModal();
-  if(currentDetailId) openDetail(currentDetailId);
-  // Sync to Google Sheets con el objeto fresco de localStorage
-  if(savedId) {
+
+  // Si hay fotos nuevas, bloquear modal y subir ANTES de cerrar
+  if (tieneNuevasFotos && savedId) {
     const savedT = tickets.find(x=>x.id===savedId);
-    if(savedT) {
+    if (savedT) {
+      syncTicketToSheets(savedT);
+      bloquearModal(true, '⏳ Subiendo fotos...');
+      await syncAtencionToSheets(savedT);
+      bloquearModal(false, '💾 Guardar Ticket');
+    }
+  } else if (savedId) {
+    const savedT = tickets.find(x=>x.id===savedId);
+    if (savedT) {
       syncTicketToSheets(savedT);
       syncAtencionToSheets(savedT);
     }
   }
+
+  closeModal();
+  if(currentDetailId) openDetail(currentDetailId);
 }
 
 // ════════════════════════════════════════════════
