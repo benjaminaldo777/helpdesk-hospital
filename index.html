@@ -1365,7 +1365,8 @@ function forzarMayusKey(e) {
   }
 }
 
-function sheetsRead(params) {
+function sheetsRead(params, timeoutMs) {
+  timeoutMs = timeoutMs || 15000;
   return new Promise((resolve) => {
     if (!SCRIPT_URL) { resolve(null); return; }
     const cbName = 'hd_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
@@ -1397,7 +1398,7 @@ function sheetsRead(params) {
         try { if(script.parentNode) script.parentNode.removeChild(script); } catch(e){}
         resolve(null);
       }
-    }, 15000);
+    }, timeoutMs);
   });
 }
 
@@ -1486,26 +1487,32 @@ async function syncAtencionToSheets(ticket) {
 
 // Enviar foto en trozos de 40KB via JSONP (evita límite de URL)
 async function subirFotoEnChunks(ticketId, fIdx, base64) {
-  const CHUNK_SIZE = 40000; // 40KB por chunk — seguro para URL GET
+  // encodeURIComponent expande x3 — usar chunks de 3000 chars → ~9KB URL, seguro
+  const CHUNK_SIZE = 3000;
   const chunks = [];
   for (let i = 0; i < base64.length; i += CHUNK_SIZE) {
     chunks.push(base64.substring(i, i + CHUNK_SIZE));
   }
   const cacheKey = ticketId + '_f' + fIdx;
+  console.log('📸 Foto ' + (fIdx+1) + ': ' + base64.length + ' chars → ' + chunks.length + ' chunks');
   for (let i = 0; i < chunks.length; i++) {
+    const esUltimo = (i === chunks.length - 1);
+    // Último chunk: ensambla + sube a Drive + actualiza Sheets → puede tardar 30-60s
+    const timeout = esUltimo ? 90000 : 15000;
     const r = await sheetsRead({
-      action:       'uploadFotoChunk',
-      id:           cacheKey,
-      chunk:        chunks[i],
-      idx:          i,
-      total:        chunks.length,
-      ticketId:     ticketId,
-      fIdx:         fIdx
-    });
+      action:   'uploadFotoChunk',
+      id:       cacheKey,
+      chunk:    chunks[i],
+      idx:      i,
+      total:    chunks.length,
+      ticketId: ticketId,
+      fIdx:     fIdx
+    }, timeout);
     if (!r || !r.ok) {
-      console.warn('Chunk ' + i + ' falló:', r);
+      console.warn('❌ Chunk ' + i + '/' + chunks.length + ' falló:', JSON.stringify(r));
       return false;
     }
+    if (!esUltimo) await new Promise(res => setTimeout(res, 100));
   }
   return true;
 }
