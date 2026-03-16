@@ -1487,8 +1487,8 @@ async function syncAtencionToSheets(ticket) {
 
 // Enviar foto en trozos de 40KB via JSONP (evita límite de URL)
 async function subirFotoEnChunks(ticketId, fIdx, base64) {
-  // encodeURIComponent expande x3 — usar chunks de 3000 chars → ~9KB URL, seguro
-  const CHUNK_SIZE = 3000;
+  // 1500 chars por chunk — seguro para CacheService (100KB límite) y URL GET
+  const CHUNK_SIZE = 1500;
   const chunks = [];
   for (let i = 0; i < base64.length; i += CHUNK_SIZE) {
     chunks.push(base64.substring(i, i + CHUNK_SIZE));
