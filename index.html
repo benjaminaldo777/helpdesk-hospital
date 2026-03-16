@@ -1509,7 +1509,9 @@ async function subirFotoEnChunks(ticketId, fIdx, base64) {
       fIdx:     fIdx
     }, timeout);
     if (!r || !r.ok) {
-      console.warn('❌ Chunk ' + i + '/' + chunks.length + ' falló:', JSON.stringify(r));
+      const errMsg = r ? r.msg : 'Sin respuesta (timeout)';
+      console.warn('❌ Chunk ' + i + '/' + chunks.length + ' falló:', errMsg);
+      toast('⚠️ Error foto: ' + errMsg, 'warn');
       return false;
     }
     if (!esUltimo) await new Promise(res => setTimeout(res, 100));
