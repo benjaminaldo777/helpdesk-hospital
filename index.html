@@ -788,11 +788,17 @@ header {
             <button class="pill" onclick="setPill('media',this)">🟡 Media</button>
             <button class="pill" onclick="setPill('baja',this)">🟢 Baja</button>
           </div>
-          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap">
-            <span style="font-size:0.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Ordenar:</span>
-            <button class="sort-btn active" id="sort-num" onclick="setSort('numero',this)">🔢 N° Ticket</button>
-            <button class="sort-btn" id="sort-prio" onclick="setSort('prioridad',this)">⚡ Prioridad</button>
-            <button class="sort-btn" id="sort-fecha" onclick="setSort('fecha',this)">📅 Más reciente</button>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+              <span style="font-size:0.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Ordenar:</span>
+              <button class="sort-btn active" id="sort-num" onclick="setSort('numero',this)">🔢 N° Ticket</button>
+              <button class="sort-btn" id="sort-prio" onclick="setSort('prioridad',this)">⚡ Prioridad</button>
+              <button class="sort-btn" id="sort-fecha" onclick="setSort('fecha',this)">📅 Más reciente</button>
+            </div>
+            <div style="display:flex;gap:0.5rem">
+              <button onclick="exportarExcel()" style="background:#1d6fa4;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:0.78rem;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:0.4rem">📊 Excel</button>
+              <button onclick="exportarPDF()" style="background:#ef4444;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:0.78rem;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:0.4rem">📄 PDF</button>
+            </div>
           </div>
           <div class="tickets-grid" id="allTickets"></div>
         </div>
@@ -850,9 +856,8 @@ header {
               <div class="doctor-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem">
                 <div class="form-group">
                   <label class="form-label" id="lbl-d-area">Área / Servicio <span style="color:#ef4444">*</span></label>
-                  <select class="form-select" id="d-area">
-                    <option value="">Seleccionar área...</option>
-                  </select>
+                  <input class="form-input" id="d-area" list="d-area-list" placeholder="Escriba o seleccione un área..." autocomplete="off" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase">
+                  <datalist id="d-area-list"></datalist>
                 </div>
                 <div class="form-group">
                   <label class="form-label" id="lbl-d-cat">Categoría <span style="color:#ef4444">*</span></label>
@@ -916,9 +921,8 @@ header {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" id="lbl-f-area">Área / Servicio <span style="color:#ef4444">*</span></label>
-          <select class="form-select" id="f-area">
-            <option value="">Seleccionar área...</option>
-          </select>
+          <input class="form-input" id="f-area" list="f-area-list" placeholder="Escriba o seleccione un área..." autocomplete="off" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase">
+          <datalist id="f-area-list"></datalist>
         </div>
         <div class="form-group">
           <label class="form-label" id="lbl-f-cat">Categoría <span style="color:#ef4444">*</span></label>
@@ -1328,6 +1332,90 @@ async function doctorRefresh(btn) {
   }
   btn.innerHTML = orig;
   btn.disabled = false;
+}
+
+function exportarExcel() {
+  const filtered = getFilteredTickets();
+  if (!filtered.length) { toast('⚠️ No hay tickets para exportar','warn'); return; }
+
+  // Construir CSV con BOM para que Excel lo abra bien con tildes
+  const BOM = '﻿';
+  const headers = ['N° Ticket','Fecha','Hora','Doctor/Solicitante','Área','Categoría','Problema','Técnico','Procedimiento','Estado','Prioridad'];
+  const rows = filtered.map(t => [
+    t.id, t.fecha||'', t.hora||'',
+    t.doctor||'', t.area||'', t.categoria||'', t.problema||'',
+    t.tecnico||'', t.procedimiento||'', t.estado||'', t.prioridad||''
+  ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(','));
+
+  const csv = BOM + [headers.join(',')].concat(rows).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'Tickets_HelpDesk_' + new Date().toLocaleDateString('es-PE').replace(/\//g,'-') + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ Excel descargado (' + filtered.length + ' tickets)');
+}
+
+function exportarPDF() {
+  const filtered = getFilteredTickets();
+  if (!filtered.length) { toast('⚠️ No hay tickets para exportar','warn'); return; }
+
+  const fecha = new Date().toLocaleDateString('es-PE', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const filas = filtered.map((t,i) => `
+    <tr style="background:${i%2===0?'#f8fafc':'#fff'}">
+      <td>${t.id}</td>
+      <td>${t.fecha||''}</td>
+      <td>${t.doctor||''}</td>
+      <td>${t.area||''}</td>
+      <td>${t.categoria||''}</td>
+      <td>${t.problema||''}</td>
+      <td>${t.tecnico||''}</td>
+      <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${t.estado==='Cerrado'?'#dcfce7':t.estado==='En Proceso'?'#dbeafe':'#fef3c7'};color:${t.estado==='Cerrado'?'#166534':t.estado==='En Proceso'?'#1e40af':'#92400e'}">${t.estado||''}</span></td>
+      <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${t.prioridad==='alta'?'#fee2e2':t.prioridad==='media'?'#fef9c3':'#f0fdf4'};color:${t.prioridad==='alta'?'#991b1b':t.prioridad==='media'?'#713f12':'#166534'}">${t.prioridad||''}</span></td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Tickets HelpDesk</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+    h2 { color: #0f2744; margin-bottom: 4px; }
+    p { color: #64748b; margin: 0 0 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #0f2744; color: #fff; padding: 8px 6px; text-align: left; font-size: 11px; }
+    td { padding: 6px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+    @media print { body { margin: 10px; } }
+  </style></head><body>
+  <h2>📋 Reporte de Tickets — HelpDesk Hospitalario</h2>
+  <p>Generado el ${fecha} · Total: ${filtered.length} tickets</p>
+  <table>
+    <thead><tr><th>N°</th><th>Fecha</th><th>Doctor</th><th>Área</th><th>Categoría</th><th>Problema</th><th>Técnico</th><th>Estado</th><th>Prioridad</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table>
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`;
+
+  const w = window.open('','_blank');
+  if (w) { w.document.write(html); w.document.close(); }
+  else toast('⚠️ Permite ventanas emergentes para exportar PDF','warn');
+}
+
+function getFilteredTickets() {
+  // Devuelve los tickets actualmente filtrados/ordenados en pantalla
+  let list = [...tickets];
+  const search = document.getElementById('searchBar')?.value.toLowerCase() || '';
+  if (search) list = list.filter(t =>
+    (t.id||'').toLowerCase().includes(search) ||
+    (t.doctor||'').toLowerCase().includes(search) ||
+    (t.area||'').toLowerCase().includes(search) ||
+    (t.problema||'').toLowerCase().includes(search)
+  );
+  if (activeFilter !== 'todos') {
+    if (['alta','media','baja'].includes(activeFilter)) list = list.filter(t => t.prioridad === activeFilter);
+    else list = list.filter(t => t.estado === activeFilter);
+  }
+  return sortTickets(list);
 }
 
 function toggleSidebar() {
@@ -1987,7 +2075,7 @@ function openEditModal(id) {
   document.getElementById('modalTitleText').textContent='Editar Ticket '+id;
   document.getElementById('f-doc').value=t.doctor||'';
   document.getElementById('f-prio').value=t.prioridad||'media';
-  document.getElementById('f-area').value=t.area||'';
+  document.getElementById('f-area').value=(t.area||'').toUpperCase();
   document.getElementById('f-cat').value=t.categoria||'';
   document.getElementById('f-prob').value=t.problema||'';
   document.getElementById('f-proc').value=t.procedimiento||'';
