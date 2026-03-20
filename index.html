@@ -2032,17 +2032,37 @@ function renderRecent() {
   renderDashboardExtra();
 }
 
+// Extraer {dia, mes, anio} de cualquier formato de fecha del ticket
+function parseFechaTicket(fecha) {
+  if (!fecha) return null;
+  // Formato DD/MM/YYYY (tickets nuevos)
+  if (fecha.includes('/')) {
+    const p = fecha.split('/');
+    if (p.length === 3) return { dia: p[0].padStart(2,'0'), mes: p[1].padStart(2,'0'), anio: p[2] };
+  }
+  // Formato largo: "Mon Mar 16 2026 00:00:00..." o Date string
+  try {
+    const d = new Date(fecha);
+    if (!isNaN(d.getTime())) {
+      return {
+        dia:  String(d.getDate()).padStart(2,'0'),
+        mes:  String(d.getMonth()+1).padStart(2,'0'),
+        anio: String(d.getFullYear())
+      };
+    }
+  } catch(e) {}
+  return null;
+}
+
 function renderDashboardExtra() {
   // ── Resumen del mes actual ──
   const ahora = new Date();
   const mesActual = String(ahora.getMonth()+1).padStart(2,'0');
   const anioActual = String(ahora.getFullYear());
   const delMes = tickets.filter(t => {
-    if (!t.fecha) return false;
-    // fecha formato DD/MM/YYYY
-    const parts = t.fecha.split('/');
-    if (parts.length < 3) return false;
-    return parts[1] === mesActual && parts[2] === anioActual;
+    const f = parseFechaTicket(t.fecha);
+    if (!f) return false;
+    return f.mes === mesActual && f.anio === anioActual;
   });
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const mesNombre = meses[ahora.getMonth()];
@@ -2083,9 +2103,8 @@ function actualizarFiltroAnio() {
   const sel = document.getElementById('filtro-anio');
   if (!sel) return;
   const anios = [...new Set(tickets.map(t => {
-    if (!t.fecha) return null;
-    const p = t.fecha.split('/');
-    return p.length===3 ? p[2] : null;
+    const f = parseFechaTicket(t.fecha);
+    return f ? f.anio : null;
   }).filter(Boolean))].sort((a,b)=>b-a);
   const cur = sel.value;
   sel.innerHTML = '<option value="">Año</option>' + anios.map(a=>'<option value="'+a+'"'+(a===cur?' selected':'')+'>'+a+'</option>').join('');
@@ -2104,12 +2123,11 @@ function actualizarFiltroDia() {
   if (!mes) { sel.innerHTML = '<option value="">Día</option>'; return; }
   // Obtener días únicos que tienen tickets en ese mes/año
   const dias = [...new Set(tickets.map(t => {
-    if (!t.fecha) return null;
-    const p = t.fecha.split('/');
-    if (p.length!==3) return null;
-    if (anio && p[2]!==anio) return null;
-    if (p[1]!==mes) return null;
-    return p[0];
+    const f = parseFechaTicket(t.fecha);
+    if (!f) return null;
+    if (anio && f.anio!==anio) return null;
+    if (f.mes!==mes) return null;
+    return f.dia;
   }).filter(Boolean))].sort((a,b)=>parseInt(a)-parseInt(b));
   sel.innerHTML = '<option value="">Día</option>' + dias.map(d=>'<option value="'+d+'"'+(d===cur?' selected':'')+'>'+d+'</option>').join('');
 }
@@ -2134,13 +2152,13 @@ function getFiltered() {
     if(activeFilter==='media'&&t.prioridad!=='media') return false;
     if(activeFilter==='baja'&&t.prioridad!=='baja') return false;
     if(s&&!(t.id+t.doctor+t.area+t.categoria+t.problema).toLowerCase().includes(s)) return false;
-    // Filtro de fecha (DD/MM/YYYY)
+    // Filtro de fecha — soporta DD/MM/YYYY y formato largo
     if(fMes || fAnio || fDia) {
-      const p = (t.fecha||'').split('/');
-      if(p.length!==3) return false;
-      if(fDia  && p[0]!==fDia)  return false;
-      if(fMes  && p[1]!==fMes)  return false;
-      if(fAnio && p[2]!==fAnio) return false;
+      const f = parseFechaTicket(t.fecha);
+      if(!f) return false;
+      if(fDia  && f.dia  !== fDia.padStart(2,'0'))  return false;
+      if(fMes  && f.mes  !== fMes)                   return false;
+      if(fAnio && f.anio !== fAnio)                  return false;
     }
     return true;
   });
