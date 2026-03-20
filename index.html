@@ -668,6 +668,7 @@ header {
 .prob-otros-box textarea:focus { outline:none; box-shadow:0 0 0 3px rgba(29,111,164,0.1); }
 
 </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1375,25 +1376,55 @@ async function doctorRefresh(btn) {
 function exportarExcel() {
   const filtered = getFilteredTickets();
   if (!filtered.length) { toast('⚠️ No hay tickets para exportar','warn'); return; }
+  if (typeof XLSX === 'undefined') { toast('⚠️ Cargando librería, intenta en segundos','warn'); return; }
 
-  // Construir CSV con BOM para que Excel lo abra bien con tildes
-  const BOM = '﻿';
-  const headers = ['N° Ticket','Fecha','Hora','Doctor/Solicitante','Área','Categoría','Problema','Técnico','Procedimiento','Estado','Prioridad'];
-  const rows = filtered.map(t => [
-    t.id, t.fecha||'', t.hora||'',
-    t.doctor||'', t.area||'', t.categoria||'', t.problema||'',
-    t.tecnico||'', t.procedimiento||'', t.estado||'', t.prioridad||''
-  ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(','));
+  function fechaLegible(t) {
+    const f = parseFechaTicket(t.fecha, t.ts);
+    return f ? f.dia+'/'+f.mes+'/'+f.anio : (t.fecha||'');
+  }
 
-  const csv = BOM + [headers.join(',')].concat(rows).join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = 'Tickets_HelpDesk_' + new Date().toLocaleDateString('es-PE').replace(/\//g,'-') + '.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('✅ Excel descargado (' + filtered.length + ' tickets)');
+  // Cabeceras igual que hoja Atenciones
+  const headers = ['ID Ticket','Fecha Registro','Fecha Edición','Doctor/Solicitante',
+    'Prioridad','Área/Servicio','Categoría','Descripción del Problema',
+    'Técnico(s)','Procedimiento Ejecutado','Estado',
+    'Foto 1','Foto 2','Foto 3','Foto 4'];
+
+  const data = [headers];
+  filtered.forEach(t => {
+    const fotos = Array.isArray(t.foto) ? t.foto : (t.foto ? [t.foto] : []);
+    data.push([
+      t.id||'',
+      fechaLegible(t) + (t.hora ? ' '+t.hora : ''),
+      t.editado||'',
+      t.doctor||'',
+      t.prioridad||'',
+      t.area||'',
+      t.categoria||'',
+      t.problema||'',
+      t.tecnico||'',
+      t.procedimiento||'',
+      t.estado||'',
+      fotos.length>0?'(ver Drive)':'',
+      fotos.length>1?'(ver Drive)':'',
+      fotos.length>2?'(ver Drive)':'',
+      fotos.length>3?'(ver Drive)':''
+    ]);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  // Estilo de cabecera y anchos
+  ws['!cols'] = [{wch:10},{wch:20},{wch:18},{wch:22},{wch:9},{wch:20},{wch:14},
+                 {wch:28},{wch:22},{wch:32},{wch:11},{wch:11},{wch:11},{wch:11},{wch:11}];
+
+  // Congelar primera fila
+  ws['!freeze'] = {xSplit:0, ySplit:1};
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Atenciones');
+  const hoy = new Date().toLocaleDateString('es-PE').replace(/\//g,'-');
+  XLSX.writeFile(wb, 'Atenciones_HelpDesk_'+hoy+'.xlsx');
+  toast('✅ Excel descargado — '+filtered.length+' registros');
 }
 
 function exportarPDF() {
