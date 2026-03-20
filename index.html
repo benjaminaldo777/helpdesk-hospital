@@ -761,12 +761,31 @@ header {
       <main class="content">
         <!-- DASHBOARD -->
         <div class="view active" id="view-dashboard">
+          <!-- Stats principales -->
           <div class="stats-row">
             <div class="stat-box s-total"><div class="stat-n" id="st-total">0</div><div class="stat-label-box">Total Tickets</div></div>
             <div class="stat-box s-open"><div class="stat-n" id="st-open">0</div><div class="stat-label-box">Abiertos</div></div>
             <div class="stat-box s-proc"><div class="stat-n" id="st-proc">0</div><div class="stat-label-box">En Proceso</div></div>
             <div class="stat-box s-done"><div class="stat-n" id="st-done">0</div><div class="stat-label-box">Cerrados</div></div>
           </div>
+
+          <!-- Fila de 2 tarjetas: Resumen del mes + Tickets por área -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+
+            <!-- Resumen del mes actual -->
+            <div class="card" style="padding:1.25rem">
+              <div style="font-size:0.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.85rem">📅 Este Mes</div>
+              <div id="dash-mes-stats" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+            </div>
+
+            <!-- Barras por área -->
+            <div class="card" style="padding:1.25rem">
+              <div style="font-size:0.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.85rem">🏥 Tickets por Área</div>
+              <div id="dash-areas-bar" style="display:flex;flex-direction:column;gap:0.45rem"></div>
+            </div>
+          </div>
+
+          <!-- Tickets recientes -->
           <div class="section-header">
             <h2 class="section-title">Tickets Recientes</h2>
             <button class="btn-primary" onclick="showView('tickets',document.querySelector('#adminLayout .nav-item:nth-child(3)'))">Ver todos →</button>
@@ -787,6 +806,25 @@ header {
             <button class="pill" onclick="setPill('alta',this)">🔴 Alta</button>
             <button class="pill" onclick="setPill('media',this)">🟡 Media</button>
             <button class="pill" onclick="setPill('baja',this)">🟢 Baja</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap">
+            <span style="font-size:0.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px">📅 Fecha:</span>
+            <select id="filtro-dia" onchange="renderAll()" style="font-size:0.78rem;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);cursor:pointer">
+              <option value="">Día</option>
+            </select>
+            <select id="filtro-mes" onchange="actualizarFiltroDia();renderAll()" style="font-size:0.78rem;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);cursor:pointer">
+              <option value="">Mes</option>
+              <option value="01">Enero</option><option value="02">Febrero</option>
+              <option value="03">Marzo</option><option value="04">Abril</option>
+              <option value="05">Mayo</option><option value="06">Junio</option>
+              <option value="07">Julio</option><option value="08">Agosto</option>
+              <option value="09">Septiembre</option><option value="10">Octubre</option>
+              <option value="11">Noviembre</option><option value="12">Diciembre</option>
+            </select>
+            <select id="filtro-anio" onchange="actualizarFiltroMes();renderAll()" style="font-size:0.78rem;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text1);cursor:pointer">
+              <option value="">Año</option>
+            </select>
+            <button onclick="limpiarFiltroFecha()" style="font-size:0.72rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">✕ Limpiar</button>
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;justify-content:space-between">
             <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
@@ -1990,11 +2028,103 @@ function ticketHTML(t, clickFn='openDetail') {
 function renderRecent() {
   const el = document.getElementById('recentTickets');
   const r = tickets.slice(0,6);
-  el.innerHTML = r.length ? r.map(t=>ticketHTML(t)).join('') : `<div class="empty"><div class="empty-icon">🎫</div>No hay tickets aún.</div>`;
+  el.innerHTML = r.length ? r.map(t=>ticketHTML(t)).join('') : '<div class="empty"><div class="empty-icon">🎫</div>No hay tickets aún.</div>';
+  renderDashboardExtra();
+}
+
+function renderDashboardExtra() {
+  // ── Resumen del mes actual ──
+  const ahora = new Date();
+  const mesActual = String(ahora.getMonth()+1).padStart(2,'0');
+  const anioActual = String(ahora.getFullYear());
+  const delMes = tickets.filter(t => {
+    if (!t.fecha) return false;
+    // fecha formato DD/MM/YYYY
+    const parts = t.fecha.split('/');
+    if (parts.length < 3) return false;
+    return parts[1] === mesActual && parts[2] === anioActual;
+  });
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesNombre = meses[ahora.getMonth()];
+  const abiMes = delMes.filter(t=>t.estado==='Abierto').length;
+  const proMes = delMes.filter(t=>t.estado==='En Proceso').length;
+  const cerMes = delMes.filter(t=>t.estado==='Cerrado').length;
+  const elMes = document.getElementById('dash-mes-stats');
+  if (elMes) elMes.innerHTML =
+    '<div style="font-size:1.6rem;font-weight:800;color:var(--blue);margin-bottom:0.25rem">'+delMes.length+'</div>' +
+    '<div style="font-size:0.78rem;color:var(--text2);margin-bottom:0.75rem">tickets en '+mesNombre+' '+anioActual+'</div>' +
+    '<div style="display:flex;gap:1rem">' +
+      '<div style="text-align:center"><div style="font-size:1.1rem;font-weight:700;color:#f59e0b">'+abiMes+'</div><div style="font-size:0.68rem;color:var(--text3)">Abiertos</div></div>' +
+      '<div style="text-align:center"><div style="font-size:1.1rem;font-weight:700;color:#60a5fa">'+proMes+'</div><div style="font-size:0.68rem;color:var(--text3)">En Proceso</div></div>' +
+      '<div style="text-align:center"><div style="font-size:1.1rem;font-weight:700;color:#34d399">'+cerMes+'</div><div style="font-size:0.68rem;color:var(--text3)">Cerrados</div></div>' +
+    '</div>';
+
+  // ── Barras por área (top 6) ──
+  const conteo = {};
+  tickets.forEach(t => { if(t.area) conteo[t.area]=(conteo[t.area]||0)+1; });
+  const sorted = Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max = sorted.length ? sorted[0][1] : 1;
+  const elBar = document.getElementById('dash-areas-bar');
+  if (elBar) elBar.innerHTML = sorted.length ? sorted.map(([area,cnt]) =>
+    '<div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:2px">' +
+        '<span style="color:var(--text2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%">'+area+'</span>' +
+        '<span style="color:var(--text3);font-weight:700">'+cnt+'</span>' +
+      '</div>' +
+      '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">' +
+        '<div style="height:100%;width:'+Math.round(cnt/max*100)+'%;background:linear-gradient(90deg,#1d6fa4,#0d9488);border-radius:3px;transition:width 0.4s"></div>' +
+      '</div>' +
+    '</div>'
+  ).join('') : '<div style="color:var(--text3);font-size:0.8rem">Sin datos aún</div>';
+}
+
+// Poblar años disponibles según tickets existentes
+function actualizarFiltroAnio() {
+  const sel = document.getElementById('filtro-anio');
+  if (!sel) return;
+  const anios = [...new Set(tickets.map(t => {
+    if (!t.fecha) return null;
+    const p = t.fecha.split('/');
+    return p.length===3 ? p[2] : null;
+  }).filter(Boolean))].sort((a,b)=>b-a);
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Año</option>' + anios.map(a=>'<option value="'+a+'"'+(a===cur?' selected':'')+'>'+a+'</option>').join('');
+}
+
+function actualizarFiltroMes() {
+  actualizarFiltroDia();
+}
+
+function actualizarFiltroDia() {
+  const mes = document.getElementById('filtro-mes')?.value;
+  const anio = document.getElementById('filtro-anio')?.value;
+  const sel = document.getElementById('filtro-dia');
+  if (!sel) return;
+  const cur = sel.value;
+  if (!mes) { sel.innerHTML = '<option value="">Día</option>'; return; }
+  // Obtener días únicos que tienen tickets en ese mes/año
+  const dias = [...new Set(tickets.map(t => {
+    if (!t.fecha) return null;
+    const p = t.fecha.split('/');
+    if (p.length!==3) return null;
+    if (anio && p[2]!==anio) return null;
+    if (p[1]!==mes) return null;
+    return p[0];
+  }).filter(Boolean))].sort((a,b)=>parseInt(a)-parseInt(b));
+  sel.innerHTML = '<option value="">Día</option>' + dias.map(d=>'<option value="'+d+'"'+(d===cur?' selected':'')+'>'+d+'</option>').join('');
+}
+
+function limpiarFiltroFecha() {
+  const ids = ['filtro-dia','filtro-mes','filtro-anio'];
+  ids.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  renderAll();
 }
 
 function getFiltered() {
   const s=(document.getElementById('searchBar')?.value||'').toLowerCase();
+  const fDia  = document.getElementById('filtro-dia')?.value  || '';
+  const fMes  = document.getElementById('filtro-mes')?.value  || '';
+  const fAnio = document.getElementById('filtro-anio')?.value || '';
   return tickets.filter(t => {
     if(activeAreaFilter && t.area!==activeAreaFilter) return false;
     if(activeFilter==='Abierto'&&t.estado!=='Abierto') return false;
@@ -2004,15 +2134,25 @@ function getFiltered() {
     if(activeFilter==='media'&&t.prioridad!=='media') return false;
     if(activeFilter==='baja'&&t.prioridad!=='baja') return false;
     if(s&&!(t.id+t.doctor+t.area+t.categoria+t.problema).toLowerCase().includes(s)) return false;
+    // Filtro de fecha (DD/MM/YYYY)
+    if(fMes || fAnio || fDia) {
+      const p = (t.fecha||'').split('/');
+      if(p.length!==3) return false;
+      if(fDia  && p[0]!==fDia)  return false;
+      if(fMes  && p[1]!==fMes)  return false;
+      if(fAnio && p[2]!==fAnio) return false;
+    }
     return true;
   });
 }
 
 function renderAll() {
+  actualizarFiltroAnio();
   const el=document.getElementById('allTickets');
   const list=getFiltered();
-  el.innerHTML=list.length?list.map(t=>ticketHTML(t)).join(''):
-    `<div class="empty"><div class="empty-icon">🔍</div>No se encontraron tickets con ese filtro.</div>`;
+  const count = list.length;
+  el.innerHTML=count?list.map(t=>ticketHTML(t)).join(''):
+    '<div class="empty"><div class="empty-icon">🔍</div>No se encontraron tickets con ese filtro.</div>';
 }
 
 function setPill(f,el) {
