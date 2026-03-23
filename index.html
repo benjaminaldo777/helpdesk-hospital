@@ -1911,6 +1911,7 @@ function _finalizarLogin(dni, pass, err) {
   err.style.display = 'none';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'block';
+  registrarSesionActiva(user);
   document.getElementById('headerUserName').textContent = user.nombre;
   document.getElementById('headerUserRole').textContent = user.rol === 'admin' ? '🔧 Administrador' : '👨‍⚕️ Doctor / Solicitante';
 
@@ -1945,7 +1946,57 @@ function _finalizarLogin(dni, pass, err) {
   }
 }
 
+// ── Gestión de sesiones activas ──
+const SESSION_ID = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+
+function detectarDispositivo() {
+  const ua = navigator.userAgent;
+  if (/tablet|ipad|playbook|silk/i.test(ua)) return '📱 Tablet';
+  if (/mobile|iphone|ipod|android.*mobile|blackberry|opera mini/i.test(ua)) return '📱 Celular';
+  if (/android/i.test(ua)) return '📱 Android';
+  return '💻 PC/Laptop';
+}
+
+function registrarSesionActiva(user) {
+  if (!sheetsSyncEnabled) return;
+  const dispositivo = detectarDispositivo();
+  const ahora = new Date().toLocaleString('es-PE');
+  sheetsCall({
+    action: 'registrarSesion',
+    sessionId: SESSION_ID,
+    usuario: user.nombre || user.dni,
+    rol: user.rol,
+    dispositivo: dispositivo,
+    hora: ahora
+  });
+}
+
+function eliminarSesionActiva() {
+  if (!sheetsSyncEnabled) return;
+  sheetsCall({ action: 'eliminarSesion', sessionId: SESSION_ID });
+}
+
+async function cargarSesionesActivas() {
+  if (!sheetsSyncEnabled) return;
+  const r = await sheetsRead({ action: 'getSesiones' });
+  const el = document.getElementById('sesiones-activas');
+  if (!el) return;
+  if (!r || !r.ok || !r.sesiones || r.sesiones.length === 0) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:0.8rem">Sin sesiones activas</div>';
+    return;
+  }
+  el.innerHTML = r.sesiones.map(s => `
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 6px #22c55e"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text1)">${s.dispositivo} — ${s.usuario}</div>
+        <div style="font-size:0.7rem;color:var(--text3)">${s.rol} · ${s.hora}</div>
+      </div>
+    </div>`).join('');
+}
+
 function doLogout() {
+  eliminarSesionActiva();
   stopAutoRefresh();
   currentUser = null;
   document.getElementById('appScreen').style.display = 'none';
@@ -1971,7 +2022,7 @@ function showView(name, navEl) {
   }
   if (name==='tickets') { activeAreaFilter=null; document.getElementById('ticketsViewTitle').textContent='Todos los Tickets'; renderAll(); }
   if (name==='dashboard') renderRecent();
-  if (name==='config') renderConfig();
+  if (name==='config') { renderConfig(); setTimeout(cargarSesionesActivas, 300); }
 }
 
 function backToList() {
@@ -2846,6 +2897,15 @@ function renderConfig() {
         <div class="system-info-row"><span class="system-info-key">Total tickets</span><span class="system-info-val">${tickets.length}</span></div>
         <div class="system-info-row"><span class="system-info-key">Tickets abiertos</span><span class="system-info-val">${tickets.filter(t=>t.estado==='Abierto').length}</span></div>
         <div class="system-info-row"><span class="system-info-key">Almacenamiento</span><span class="system-info-val">${sheetsSyncEnabled?"Local + Google Sheets ✅":"Solo local"}</span></div>
+        <div class="system-info-row" style="align-items:flex-start">
+          <span class="system-info-key" style="padding-top:4px">Dispositivos activos</span>
+          <div style="flex:1">
+            <div id="sesiones-activas" style="margin-bottom:0.5rem">
+              <div style="color:var(--text3);font-size:0.8rem">Cargando...</div>
+            </div>
+            <button onclick="cargarSesionesActivas()" style="font-size:0.72rem;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer">🔄 Refrescar</button>
+          </div>
+        </div>
         <div style="margin-top:1rem">
           <button class="reset-btn" onclick="if(confirm('¿Borrar TODOS los tickets y reiniciar el contador a TK-0001? Esta acción no se puede deshacer.'))clearAllTickets()">🗑️ Borrar todos los tickets y reiniciar contador</button>
         </div>
@@ -3472,6 +3532,8 @@ function toast(msg, type='ok'){
 // Aplicar tema guardado (afecta pantalla de login también)
 applyStoredTheme();
 applyLabels();
+// Limpiar sesión si cierra pestaña
+window.addEventListener('beforeunload', () => { if (currentUser) eliminarSesionActiva(); });
 // Inicializar usuarios correctamente al cargar
 USERS = loadUsers();
 // Limpiar cualquier usuario base corrupto del localStorage
